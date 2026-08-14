@@ -73,49 +73,130 @@ if (isset($_SESSION['form_data'])) {
     
     <style>
         .swal2-popup { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; border-radius: 12px; }
-        .swal2-title { color: #2ecc71; font-weight: 600; font-size: 24px; }
-        .swal2-confirm { background-color: #2ecc71 !important; border-color: #27ae60 !important; }
-        .swal2-cancel { background-color: #3498db !important; border-color: #2980b9 !important; }
+        .swal2-title { color: #059669; font-weight: 600; font-size: 24px; }
+        .swal2-confirm { background-color: #059669 !important; border-color: #047857 !important; }
+        .swal2-cancel { background-color: #3b82f6 !important; border-color: #2563eb !important; }
         
-        /* Super Admin role highlight */
-        .role-superadmin {
-            background: #fff3cd;
-            border-left: 3px solid #ffc107;
-            padding-left: 8px;
+        /* Sleek Create User Form Styles */
+        .create-user-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            background: #fff;
+            margin-top: 15px;
         }
         
+        .create-user-card .card-body {
+            padding: 24px;
+        }
+        
+        .form-group.row {
+            margin-bottom: 20px;
+        }
+        
+        .col-form-label {
+            font-weight: 600;
+            color: #475569;
+            font-size: 13px;
+            text-align: right;
+            padding-top: 8px;
+        }
+        
+        .form-control, .form-select {
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            padding: 8px 12px;
+            font-size: 13px;
+            color: #334155;
+            transition: all 0.2s ease;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            outline: none;
+        }
+        
+        .btn-create {
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            padding: 8px 18px;
+            background-color: #059669;
+            color: #fff;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .btn-create:hover {
+            background-color: #047857;
+        }
+        
+        .btn-reset {
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            padding: 8px 18px;
+            background-color: #f1f5f9;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .btn-reset:hover {
+            background-color: #e2e8f0;
+            color: #334155;
+        }
+        
+        /* Modern Badges for SuperAlert */
         .role-badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 4px;
             font-size: 11px;
             font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 12px;
+            text-transform: capitalize;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
             margin-left: 5px;
         }
         
         .role-badge-superadmin {
-            background: #ffc107;
-            color: #333;
+            background-color: #fef3c7;
+            color: #d97706;
+            border: 1px solid #fde68a;
         }
         
         .role-badge-admin {
-            background: #3498db;
-            color: white;
+            background-color: #dbeafe;
+            color: #2563eb;
+            border: 1px solid #bfdbfe;
         }
         
         .role-badge-supervisor {
-            background: #27ae60;
-            color: white;
+            background-color: #d1fae5;
+            color: #059669;
+            border: 1px solid #a7f3d0;
         }
         
         .role-badge-dataentry {
-            background: #95a5a6;
-            color: white;
+            background-color: #f3f4f6;
+            color: #4b5563;
+            border: 1px solid #e5e7eb;
         }
         
         .role-badge-report {
-            background: #9b59b6;
-            color: white;
+            background-color: #e0f2fe;
+            color: #0284c7;
+            border: 1px solid #bae6fd;
         }
     </style>
 </head>
@@ -131,23 +212,23 @@ if (isset($_SESSION['form_data'])) {
       
       <!-- Display messages -->
       <?php if (!empty($errorMessage)): ?>
-      <div class="alert alert-danger">
+      <div class="alert alert-danger" style="border-radius: 6px;">
         <i class="fas fa-exclamation-triangle"></i> <?php echo htmlspecialchars($errorMessage); ?>
       </div>
       <?php endif; ?>
       
       <?php if (!empty($warningMessage)): ?>
-      <div class="alert alert-warning">
+      <div class="alert alert-warning" style="border-radius: 6px;">
         <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($warningMessage); ?>
       </div>
       <?php endif; ?>
       
       <div class="row">
         <div class="col-md-6">
-          <div class="card">
+          <div class="create-user-card">
             <form class="form-horizontal" enctype="multipart/form-data" action="user" method="POST" id="userForm">
               <div class="card-body">
-                <h4 class="card-title"><i class="fas fa-user-plus text-success"></i> Create New User</h4>
+                <h4 class="card-title" style="font-weight: 600; color: #334155; margin-bottom: 20px;"><i class="fas fa-user-plus" style="color: #059669;"></i> Create New User</h4>
                 
                 <!-- Service No -->
                 <div class="form-group row">
@@ -194,7 +275,7 @@ if (isset($_SESSION['form_data'])) {
                 <!-- Role Info Box -->
                 <div class="form-group row" id="roleInfoBox" style="display: none;">
                   <div class="col-sm-9 offset-sm-3">
-                    <div id="roleInfoContent" style="padding: 10px; border-radius: 6px; font-size: 13px;"></div>
+                    <div id="roleInfoContent" style="font-size: 13px;"></div>
                   </div>
                 </div>
                 
@@ -215,7 +296,7 @@ if (isset($_SESSION['form_data'])) {
                       <input type="password" class="form-control" name="password" id="password" placeholder="Leave empty for auto-generation" 
                              value="<?php echo isset($formData['password']) ? htmlspecialchars($formData['password']) : ''; ?>" />
                       <div class="input-group-append">
-                        <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                        <button class="btn btn-outline-secondary" type="button" id="togglePassword" style="border-top-left-radius: 0; border-bottom-left-radius: 0; height: 100%;">
                           <i class="fas fa-eye"></i>
                         </button>
                       </div>
@@ -234,13 +315,11 @@ if (isset($_SESSION['form_data'])) {
                 </div>
               </div>
               
-              <div class="border-top">
-                <div class="card-body">
-                  <button type="submit" name="regUser" class="btn btn-success">
-                    <i class="fas fa-user-plus"></i> Create User
-                  </button>
-                  <button type="reset" class="btn btn-secondary">Reset</button>
-                </div>
+              <div class="border-top" style="border-color: #f1f5f9; padding: 15px 24px; background-color: #f8fafc;">
+                <button type="submit" name="regUser" class="btn-create">
+                  <i class="fas fa-user-plus"></i> Create User
+                </button>
+                <button type="reset" class="btn-reset" style="margin-left: 8px;">Reset</button>
               </div>
             </form>
           </div>
