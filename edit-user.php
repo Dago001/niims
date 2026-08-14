@@ -63,6 +63,187 @@ if ($has_is_active_column) {
 
 $retrieve = mysqli_query($conn, $sqluse);
 ?>
+<style>
+    /* Sleek User Management Styles */
+    .user-table-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        background: #fff;
+        margin-top: 15px;
+    }
+    
+    .user-table-card .card-body {
+        padding: 20px;
+    }
+    
+    /* Modern Badges */
+    .badge-modern {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 5px 10px;
+        border-radius: 20px;
+        text-transform: capitalize;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .badge-superadmin {
+        background-color: #fef3c7;
+        color: #d97706;
+        border: 1px solid #fde68a;
+    }
+    
+    .badge-admin {
+        background-color: #dbeafe;
+        color: #2563eb;
+        border: 1px solid #bfdbfe;
+    }
+    
+    .badge-supervisor {
+        background-color: #d1fae5;
+        color: #059669;
+        border: 1px solid #a7f3d0;
+    }
+    
+    .badge-dataentry {
+        background-color: #f3f4f6;
+        color: #4b5563;
+        border: 1px solid #e5e7eb;
+    }
+    
+    .badge-report {
+        background-color: #e0f2fe;
+        color: #0284c7;
+        border: 1px solid #bae6fd;
+    }
+
+    .badge-active {
+        background-color: #ecfdf5;
+        color: #10b981;
+        border: 1px solid #a7f3d0;
+    }
+
+    .badge-inactive {
+        background-color: #fef2f2;
+        color: #ef4444;
+        border: 1px solid #fecaca;
+    }
+    
+    /* Table Enhancements */
+    #zero_config {
+        border: none !important;
+    }
+    
+    #zero_config th {
+        background: #f8fafc;
+        color: #475569;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 11px;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #e2e8f0 !important;
+        border-top: none !important;
+        border-left: none !important;
+        border-right: none !important;
+        padding: 12px 16px;
+    }
+    
+    #zero_config td {
+        padding: 12px 16px;
+        vertical-align: middle;
+        border-bottom: 1px solid #e2e8f0;
+        border-top: none !important;
+        border-left: none !important;
+        border-right: none !important;
+        font-size: 13px;
+        color: #334155;
+    }
+    
+    #zero_config tbody tr:hover {
+        background-color: #f8fafc;
+    }
+    
+    /* Sleek Actions Buttons */
+    .btn-action-group {
+        display: inline-flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+    
+    .btn-action {
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 12px;
+        padding: 6px 12px;
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        cursor: pointer;
+    }
+    
+    .btn-action-deactivate {
+        background-color: #fff1f2;
+        color: #e11d48;
+        border-color: #ffe4e6;
+    }
+    
+    .btn-action-deactivate:hover {
+        background-color: #ffe4e6;
+        color: #be123c;
+    }
+    
+    .btn-action-activate {
+        background-color: #ecfdf5;
+        color: #059669;
+        border-color: #d1fae5;
+    }
+    
+    .btn-action-activate:hover {
+        background-color: #d1fae5;
+        color: #047857;
+    }
+    
+    .btn-action-reset {
+        background-color: #f0fdfa;
+        color: #0d9488;
+        border-color: #ccfbf1;
+    }
+    
+    .btn-action-reset:hover {
+        background-color: #ccfbf1;
+        color: #0f766e;
+    }
+    
+    .btn-action-edit {
+        background-color: #eff6ff;
+        color: #2563eb;
+        border-color: #dbeafe;
+    }
+    
+    .btn-action-edit:hover {
+        background-color: #dbeafe;
+        color: #1d4ed8;
+    }
+    
+    /* Current user badge */
+    .current-user-tag {
+        background-color: #f8fafc;
+        color: #64748b;
+        border: 1px dashed #cbd5e1;
+        border-radius: 6px;
+        padding: 5px 12px;
+        font-size: 11px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+</style>
+
       <div class="right_col" role="main">
         <div class="">
           <div class="page-title">
@@ -72,146 +253,210 @@ $retrieve = mysqli_query($conn, $sqluse);
           </div>
           <div class="clearfix"></div>
           
+          <!-- Stats Cards Section -->
+          <div class="row" style="margin-bottom: 20px;">
+              <!-- Metric 1: Total Users -->
+              <div class="col-md-3 col-sm-6 col-xs-12">
+                  <div class="tile-stats" style="background:#fff; padding:15px; border-radius:8px; border:1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 0; position: relative;">
+                      <div class="icon" style="color: #4f46e5; position: absolute; right: 20px; top: 15px;"><i class="fa fa-users" style="font-size: 24px;"></i></div>
+                      <div class="count" style="font-size: 28px; font-weight: 700; color: #1e293b;"><?php echo mysqli_num_rows($retrieve); ?></div>
+                      <h3 style="font-size: 12px; font-weight: 600; color: #64748b; margin-top: 5px; margin-bottom: 0; text-transform: uppercase; letter-spacing: 0.5px;">Total Users</h3>
+                  </div>
+              </div>
+              <!-- Metric 2: Active Users -->
+              <div class="col-md-3 col-sm-6 col-xs-12">
+                  <div class="tile-stats" style="background:#fff; padding:15px; border-radius:8px; border:1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 0; position: relative;">
+                      <div class="icon" style="color: #10b981; position: absolute; right: 20px; top: 15px;"><i class="fa fa-user-check" style="font-size: 24px;"></i></div>
+                      <div class="count" style="font-size: 28px; font-weight: 700; color: #1e293b;">
+                          <?php 
+                              mysqli_data_seek($retrieve, 0);
+                              $active_count = 0;
+                              while ($r = mysqli_fetch_assoc($retrieve)) {
+                                  if (($r['is_active'] ?? 1) == 1) $active_count++;
+                              }
+                              echo $active_count;
+                          ?>
+                      </div>
+                      <h3 style="font-size: 12px; font-weight: 600; color: #64748b; margin-top: 5px; margin-bottom: 0; text-transform: uppercase; letter-spacing: 0.5px;">Active Users</h3>
+                  </div>
+              </div>
+              <!-- Metric 3: Inactive Users -->
+              <div class="col-md-3 col-sm-6 col-xs-12">
+                  <div class="tile-stats" style="background:#fff; padding:15px; border-radius:8px; border:1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 0; position: relative;">
+                      <div class="icon" style="color: #ef4444; position: absolute; right: 20px; top: 15px;"><i class="fa fa-user-times" style="font-size: 24px;"></i></div>
+                      <div class="count" style="font-size: 28px; font-weight: 700; color: #1e293b;">
+                          <?php 
+                              mysqli_data_seek($retrieve, 0);
+                              $inactive_count = 0;
+                              while ($r = mysqli_fetch_assoc($retrieve)) {
+                                  if (($r['is_active'] ?? 1) == 0) $inactive_count++;
+                              }
+                              echo $inactive_count;
+                          ?>
+                      </div>
+                      <h3 style="font-size: 12px; font-weight: 600; color: #64748b; margin-top: 5px; margin-bottom: 0; text-transform: uppercase; letter-spacing: 0.5px;">Deactivated</h3>
+                  </div>
+              </div>
+              <!-- Metric 4: Admins -->
+              <div class="col-md-3 col-sm-6 col-xs-12">
+                  <div class="tile-stats" style="background:#fff; padding:15px; border-radius:8px; border:1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 0; position: relative;">
+                      <div class="icon" style="color: #f59e0b; position: absolute; right: 20px; top: 15px;"><i class="fa fa-shield" style="font-size: 24px;"></i></div>
+                      <div class="count" style="font-size: 28px; font-weight: 700; color: #1e293b;">
+                          <?php 
+                              mysqli_data_seek($retrieve, 0);
+                              $admin_count = 0;
+                              while ($r = mysqli_fetch_assoc($retrieve)) {
+                                  $role = $r['user_role'] ?? '';
+                                  if ($role === 'Admin' || $role === 'SuperAdmin') $admin_count++;
+                              }
+                              echo $admin_count;
+                          ?>
+                      </div>
+                      <h3 style="font-size: 12px; font-weight: 600; color: #64748b; margin-top: 5px; margin-bottom: 0; text-transform: uppercase; letter-spacing: 0.5px;">System Admins</h3>
+                  </div>
+              </div>
+          </div>
+          
           <!-- ============================================================== -->
           <!-- Start Page Content -->
           <!-- ============================================================== -->
           <div class="row">              
-              <div class="card">
-                <div class="card-body">
-                  <h5 class="card-title"></h5>
-                  <?php if (!$has_is_active_column): ?>
-                    <div class="alert alert-info">
-                      <i class="fa fa-info-circle"></i> Note: The 'is_active' column already exists in your database. User status management is now enabled.
+              <div class="col-md-12">
+                  <div class="user-table-card">
+                    <div class="card-body">
+                      <?php if (!$has_is_active_column): ?>
+                        <div class="alert alert-info">
+                          <i class="fa fa-info-circle"></i> Note: The 'is_active' column already exists in your database. User status management is now enabled.
+                        </div>
+                      <?php endif; ?>
+                      <div class="table-responsive">
+                        <table id="zero_config" class="table">
+                          <thead>
+                            <tr>
+                              <th>Service No.</th>
+                              <th>Surname</th>
+                              <th>First Name</th>
+                              <th>Email</th>
+                              <th>User Role</th>
+                              <th>Status</th>
+                              <th>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <?php 
+                            mysqli_data_seek($retrieve, 0);
+                            while ($ret = mysqli_fetch_assoc($retrieve)): 
+                              $is_active = isset($ret['is_active']) ? $ret['is_active'] : 1;
+                              $userRole = $ret['user_role'] ?? '';
+                            ?>
+                            <tr>
+                              <td><?php echo htmlspecialchars($ret['user_id']); ?></td>
+                              <td><?php echo htmlspecialchars($ret['lastname']); ?></td>
+                              <td><?php echo htmlspecialchars($ret['firstname']); ?></td>
+                              <td><?php echo htmlspecialchars($ret['email_address']); ?></td>
+                              <td>
+                                <?php 
+                                  // Display role with appropriate badge
+                                  $roleClass = '';
+                                  $roleIcon = '';
+                                  switch($userRole) {
+                                      case 'SuperAdmin':
+                                          $roleClass = 'badge-superadmin';
+                                          $roleIcon = '<i class="fa fa-shield"></i> ';
+                                          break;
+                                      case 'Admin':
+                                          $roleClass = 'badge-admin';
+                                          $roleIcon = '<i class="fa fa-user-shield"></i> ';
+                                          break;
+                                      case 'Supervisor':
+                                          $roleClass = 'badge-supervisor';
+                                          $roleIcon = '<i class="fa fa-user-check"></i> ';
+                                          break;
+                                      case 'DataEntry':
+                                          $roleClass = 'badge-dataentry';
+                                          $roleIcon = '<i class="fa fa-keyboard-o"></i> ';
+                                          break;
+                                      case 'Report':
+                                          $roleClass = 'badge-report';
+                                          $roleIcon = '<i class="fa fa-bar-chart"></i> ';
+                                          break;
+                                      default:
+                                          $roleClass = 'badge-dataentry';
+                                          $roleIcon = '';
+                                  }
+                                ?>
+                                <span class="badge-modern <?php echo $roleClass; ?>">
+                                  <?php echo $roleIcon . htmlspecialchars($userRole); ?>
+                                </span>
+                              </td>
+                              <td>
+                                <?php 
+                                  if ($is_active == 1) {
+                                    echo '<span class="badge-modern badge-active"><span style="width: 6px; height: 6px; background-color: #10b981; border-radius: 50%; display: inline-block; margin-right: 4px;"></span>Active</span>';
+                                  } else {
+                                    echo '<span class="badge-modern badge-inactive"><span style="width: 6px; height: 6px; background-color: #ef4444; border-radius: 50%; display: inline-block; margin-right: 4px;"></span>Inactive</span>';
+                                  }
+                                ?>
+                              </td>
+                              <td>
+                                <?php 
+                                $is_current_user = false;
+                                if (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $ret['user_id']) {
+                                    $is_current_user = true;
+                                }
+                                if (isset($_SESSION['email']) && $_SESSION['email'] == $ret['email_address']) {
+                                    $is_current_user = true;
+                                }
+                                ?>
+                                
+                                <?php if ($is_current_user): ?>
+                                  <span class="current-user-tag"><i class="fa fa-user"></i> Current User</span>
+                                <?php else: ?>
+                                  <div class="btn-action-group">
+                                    <!-- Activation/Deactivation Forms -->
+                                    <form method="POST" action="" class="d-inline" id="statusForm<?php echo $ret['user_id']; ?>">
+                                      <input type="hidden" name="user_id" value="<?php echo $ret['user_id']; ?>">
+                                      <input type="hidden" name="current_page" id="currentPage<?php echo $ret['user_id']; ?>" value="">
+                                      <?php if ($is_active == 1): ?>
+                                        <input type="hidden" name="action" value="deactivate">
+                                        <button type="submit" class="btn-action btn-action-deactivate" 
+                                                onclick="return confirmStatusChange('deactivate', '<?php echo htmlspecialchars($ret['firstname'] . ' ' . $ret['lastname']); ?>', <?php echo $ret['user_id']; ?>)">
+                                          <i class="fa fa-ban"></i> Deactivate
+                                        </button>
+                                      <?php else: ?>
+                                        <input type="hidden" name="action" value="activate">
+                                        <button type="submit" class="btn-action btn-action-activate" 
+                                                onclick="return confirmStatusChange('activate', '<?php echo htmlspecialchars($ret['firstname'] . ' ' . $ret['lastname']); ?>', <?php echo $ret['user_id']; ?>)">
+                                          <i class="fa fa-check"></i> Activate
+                                        </button>
+                                      <?php endif; ?>
+                                    </form>
+                                    
+                                    <!-- Reset Password Form -->
+                                    <form method="POST" action="reset-password" class="d-inline" id="resetForm<?php echo $ret['user_id']; ?>">
+                                      <input type="hidden" name="user_id" value="<?php echo $ret['user_id']; ?>">
+                                      <input type="hidden" name="current_page" id="resetCurrentPage<?php echo $ret['user_id']; ?>" value="">
+                                      <button type="submit" class="btn-action btn-action-reset" 
+                                              onclick="return confirmResetPassword('<?php echo htmlspecialchars(addslashes($ret['firstname'] . ' ' . $ret['lastname'])); ?>', '<?php echo htmlspecialchars($userRole); ?>', <?php echo $ret['user_id']; ?>)">
+                                        <i class="fa fa-refresh"></i> Reset
+                                      </button>
+                                    </form>
+                                    
+                                    <!-- Edit Button -->
+                                    <button class="btn-action btn-action-edit" type="button" onclick="editUser(<?php echo $ret['user_id']; ?>)">
+                                      <i class="fa fa-pencil"></i> Edit
+                                    </button>
+                                  </div>
+                                <?php endif; ?>
+                              </td>
+                            </tr>
+                            <?php endwhile; ?>
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
-                  <?php endif; ?>
-                  <div class="table-responsive">
-                    <table id="zero_config" class="table table-striped table-bordered">
-                      <thead>
-                        <tr>
-                          <th>Service No.</th>
-                          <th>Surname</th>
-                          <th>First Name</th>
-                          <th>Email</th>
-                          <th>User Role</th>
-                          <th>Status</th>
-                          <th>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <?php 
-                        mysqli_data_seek($retrieve, 0);
-                        while ($ret = mysqli_fetch_assoc($retrieve)): 
-                          $is_active = isset($ret['is_active']) ? $ret['is_active'] : 1;
-                          $userRole = $ret['user_role'] ?? '';
-                        ?>
-                        <tr>
-                          <td><?php echo htmlspecialchars($ret['user_id']); ?></td>
-                          <td><?php echo htmlspecialchars($ret['lastname']); ?></td>
-                          <td><?php echo htmlspecialchars($ret['firstname']); ?></td>
-                          <td><?php echo htmlspecialchars($ret['email_address']); ?></td>
-                          <td>
-                            <?php 
-                              // Display role with appropriate badge
-                              $roleBadgeClass = '';
-                              $roleIcon = '';
-                              switch($userRole) {
-                                  case 'SuperAdmin':
-                                      $roleBadgeClass = 'badge-warning';
-                                      $roleIcon = '<i class="fa fa-shield"></i> ';
-                                      break;
-                                  case 'Admin':
-                                      $roleBadgeClass = 'badge-primary';
-                                      $roleIcon = '<i class="fa fa-user-shield"></i> ';
-                                      break;
-                                  case 'Supervisor':
-                                      $roleBadgeClass = 'badge-success';
-                                      $roleIcon = '<i class="fa fa-user-check"></i> ';
-                                      break;
-                                  case 'DataEntry':
-                                      $roleBadgeClass = 'badge-secondary';
-                                      $roleIcon = '<i class="fa fa-keyboard"></i> ';
-                                      break;
-                                  case 'Report':
-                                      $roleBadgeClass = 'badge-info';
-                                      $roleIcon = '<i class="fa fa-chart-bar"></i> ';
-                                      break;
-                                  default:
-                                      $roleBadgeClass = 'badge-light';
-                                      $roleIcon = '';
-                              }
-                            ?>
-                            <span class="badge <?php echo $roleBadgeClass; ?>">
-                              <?php echo $roleIcon . htmlspecialchars($userRole); ?>
-                            </span>
-                          </td>
-                          <td>
-                            <?php 
-                              if ($is_active == 1) {
-                                echo '<span class="badge badge-success">Active</span>';
-                              } else {
-                                echo '<span class="badge badge-danger">Inactive</span>';
-                              }
-                            ?>
-                          </td>
-                          <td>
-                            <?php 
-                            $is_current_user = false;
-                            if (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $ret['user_id']) {
-                                $is_current_user = true;
-                            }
-                            if (isset($_SESSION['email']) && $_SESSION['email'] == $ret['email_address']) {
-                                $is_current_user = true;
-                            }
-                            ?>
-                            
-                            <?php if ($is_current_user): ?>
-                              <span class="text-muted"><i class="fa fa-user"></i> Current User</span>
-                            <?php else: ?>
-                              <div class="btn-group">
-                                <!-- Activation/Deactivation Forms -->
-                                <form method="POST" action="" class="d-inline" id="statusForm<?php echo $ret['user_id']; ?>">
-                                  <input type="hidden" name="user_id" value="<?php echo $ret['user_id']; ?>">
-                                  <input type="hidden" name="current_page" id="currentPage<?php echo $ret['user_id']; ?>" value="">
-                                  <?php if ($is_active == 1): ?>
-                                    <input type="hidden" name="action" value="deactivate">
-                                    <button type="submit" class="btn btn-warning btn-sm" 
-                                            onclick="return confirmStatusChange('deactivate', '<?php echo htmlspecialchars($ret['firstname'] . ' ' . $ret['lastname']); ?>', <?php echo $ret['user_id']; ?>)">
-                                      <i class="fa fa-ban"></i> Deactivate
-                                    </button>
-                                  <?php else: ?>
-                                    <input type="hidden" name="action" value="activate">
-                                    <button type="submit" class="btn btn-success btn-sm" 
-                                            onclick="return confirmStatusChange('activate', '<?php echo htmlspecialchars($ret['firstname'] . ' ' . $ret['lastname']); ?>', <?php echo $ret['user_id']; ?>)">
-                                      <i class="fa fa-check"></i> Activate
-                                    </button>
-                                  <?php endif; ?>
-                                </form>
-                                
-                                <!-- Reset Password Form -->
-                                <form method="POST" action="reset-password" class="d-inline ml-1" id="resetForm<?php echo $ret['user_id']; ?>">
-                                  <input type="hidden" name="user_id" value="<?php echo $ret['user_id']; ?>">
-                                  <input type="hidden" name="current_page" id="resetCurrentPage<?php echo $ret['user_id']; ?>" value="">
-                                  <button type="submit" class="btn btn-info btn-sm" 
-                                          onclick="return confirmResetPassword('<?php echo htmlspecialchars(addslashes($ret['firstname'] . ' ' . $ret['lastname'])); ?>', '<?php echo htmlspecialchars($userRole); ?>', <?php echo $ret['user_id']; ?>)">
-                                    <i class="fa fa-refresh"></i> Reset Password
-                                  </button>
-                                </form>
-                                
-                                <!-- Edit Button -->
-                                <button class="btn btn-primary btn-sm ml-1" type="button" onclick="editUser(<?php echo $ret['user_id']; ?>)">
-                                  <i class="fa fa-pencil"></i> Edit
-                                </button>
-                              </div>
-                            <?php endif; ?>
-                          </td>
-                        </tr>
-                        <?php endwhile; ?>
-                      </tbody>
-                    </table>
                   </div>
-                </div>
               </div>
-            </div>
           </div>
         </div>
 
