@@ -53,9 +53,32 @@ echo "<img src=\"barcode.png\" alt=\"Barcode\">"; */
             }
             $staffData = $profile . " - " . $surname . " " . $firstname . " -".$rank;
             $qrCodeData = json_encode($staffData);
-            $qrCodeImage = 'staff_qr_code.png';
+            
+            $matrix = QRcode::text($qrCodeData);
+            $size = count($matrix);
 
-            QRcode::png($qrCodeData, $qrCodeImage, 'L', 200, 2);
+            $pixelSize = 4;
+            $padding = 2;
+            $width = ($size + 2 * $padding) * $pixelSize;
+            $height = $width;
+
+            $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' . $width . ' ' . $height . '" width="' . $width . '" height="' . $height . '">';
+            $svg .= '<rect width="100%" height="100%" fill="#ffffff" />';
+            $svg .= '<path d="';
+            for ($y = 0; $y < $size; $y++) {
+                $row = $matrix[$y];
+                for ($x = 0; $x < $size; $x++) {
+                    if ($row[$x] === '1') {
+                        $posX = ($x + $padding) * $pixelSize;
+                        $posY = ($y + $padding) * $pixelSize;
+                        $svg .= 'M' . $posX . ',' . $posY . 'h' . $pixelSize . 'v' . $pixelSize . 'h-' . $pixelSize . 'z ';
+                    }
+                }
+            }
+            $svg .= '" fill="#000000" />';
+            $svg .= '</svg>';
+
+            $qrCodeImage = 'data:image/svg+xml;base64,' . base64_encode($svg);
 
             
             $generator = new BarcodeGeneratorPNG();

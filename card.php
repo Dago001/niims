@@ -93,14 +93,31 @@ while ($foundk = mysqli_fetch_array($retrieve)) {
 $staffData = 'niims.com.ng/employee.php?id='.$profile;
 
 // ============ QR CODE GENERATION ============
-$tempDir = sys_get_temp_dir() . '/';
-$qrFileName = $tempDir . 'qr_' . $profile . '_' . time() . '.png';
-QRcode::png($staffData, $qrFileName, 'L', 10, 2);
-$qrImageData = file_get_contents($qrFileName);
-$qrCodeBase64 = 'data:image/png;base64,' . base64_encode($qrImageData);
-if (file_exists($qrFileName)) {
-    unlink($qrFileName);
+$matrix = QRcode::text($staffData);
+$size = count($matrix);
+
+$pixelSize = 4;
+$padding = 2;
+$width = ($size + 2 * $padding) * $pixelSize;
+$height = $width;
+
+$svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' . $width . ' ' . $height . '" width="' . $width . '" height="' . $height . '">';
+$svg .= '<rect width="100%" height="100%" fill="#ffffff" />';
+$svg .= '<path d="';
+for ($y = 0; $y < $size; $y++) {
+    $row = $matrix[$y];
+    for ($x = 0; $x < $size; $x++) {
+        if ($row[$x] === '1') {
+            $posX = ($x + $padding) * $pixelSize;
+            $posY = ($y + $padding) * $pixelSize;
+            $svg .= 'M' . $posX . ',' . $posY . 'h' . $pixelSize . 'v' . $pixelSize . 'h-' . $pixelSize . 'z ';
+        }
+    }
 }
+$svg .= '" fill="#000000" />';
+$svg .= '</svg>';
+
+$qrCodeBase64 = 'data:image/svg+xml;base64,' . base64_encode($svg);
 
 $generator = new BarcodeGeneratorPNG();
 $barcode = $generator->getBarcode($profile, $generator::TYPE_CODE_128, 3, 50, [0, 0, 0]);
