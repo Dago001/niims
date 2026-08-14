@@ -1,0 +1,23 @@
+{
+  "name": "Nigeria Immigration Identification Management System",
+  "short_name": "NIIMS",
+  "description": "",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#5A3E1B",
+  "background_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

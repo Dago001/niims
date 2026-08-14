@@ -1,0 +1,22 @@
+# Log files
+error_log
+php-errors.log
+security.log
+log-backup-*
+*.log
+
+# Cache and temporary files
+photo_cache.json
+scratch/
+.agents/
+.gemini/
+
+# User uploads (optional, but good practice to ignore runtime uploads in Git)
+upload/
+photo/
+
+# Backups
+*BACKUP*
+*backup*
+backup/
+temp/
