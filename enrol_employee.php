@@ -824,6 +824,10 @@ include 'top-navigation.php';
     input.value = value; // Update the input field
   }
 
+  function validatePhoneNumber(input) {
+      validateNumber(input);
+  }
+
         // Attach event listeners to input fields
         document.querySelectorAll('input[name="serviceNo"], input[name="phone"], input[name="nok_phone"]').forEach(input => {
             input.addEventListener('input', () => validatePhoneNumber(input));
@@ -839,6 +843,59 @@ include 'top-navigation.php';
 
         // Fix for Smart Wizard stepContainer height issue and AJAX submission
         $(document).ready(function() {
+            var isDuplicateServiceNo = false;
+            
+            // Check service number existence dynamically
+            $('#serviceNo').on('input change blur', function() {
+                validateNumber(this);
+                var val = $(this).val();
+                
+                if (val.length === 5) {
+                    $.ajax({
+                        url: 'check_service_no',
+                        type: 'POST',
+                        data: { serviceNo: val },
+                        dataType: 'json',
+                        success: function(response) {
+                            if (response.exists) {
+                                isDuplicateServiceNo = true;
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Service Number Exists',
+                                    text: 'Service Number ' + val + ' already exists in the system! The form has been locked.',
+                                    confirmButtonColor: '#d33'
+                                });
+                                
+                                // Lock the form and wizard
+                                $('#enrolmentForm').find('input, select, textarea').not('#serviceNo').prop('disabled', true);
+                                $('#submitBtn').prop('disabled', true);
+                                $('#serviceNo').addClass('is-invalid').css('border-color', '#d9534f');
+                                $('.buttonNext, .buttonPrevious, .buttonFinish').addClass('buttonDisabled').css('pointer-events', 'none');
+                            } else {
+                                isDuplicateServiceNo = false;
+                                
+                                // Unlock the form and wizard
+                                $('#enrolmentForm').find('input, select, textarea').prop('disabled', false);
+                                $('#submitBtn').prop('disabled', false);
+                                $('#serviceNo').removeClass('is-invalid').css('border-color', '');
+                                $('.buttonNext, .buttonPrevious, .buttonFinish').removeClass('buttonDisabled').css('pointer-events', 'auto');
+                            }
+                        },
+                        error: function() {
+                            console.error('Error verifying service number');
+                        }
+                    });
+                } else {
+                    isDuplicateServiceNo = false;
+                    
+                    // Unlock form if it is shorter than 5 digits
+                    $('#enrolmentForm').find('input, select, textarea').prop('disabled', false);
+                    $('#submitBtn').prop('disabled', false);
+                    $('#serviceNo').removeClass('is-invalid').css('border-color', '');
+                    $('.buttonNext, .buttonPrevious, .buttonFinish').removeClass('buttonDisabled').css('pointer-events', 'auto');
+                }
+            });
+
             // Success toast configuration
             const Toast = Swal.mixin({
                 toast: true,
@@ -975,6 +1032,15 @@ include 'top-navigation.php';
             // Smart Wizard initialization
             $('#wizard').smartWizard({
                 onLeaveStep: function(obj, context) {
+                    if (isDuplicateServiceNo) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Form Locked',
+                            text: 'You cannot proceed because the entered Service Number already exists in the system.',
+                            confirmButtonColor: '#d33'
+                        });
+                        return false;
+                    }
                     // Only validate when moving forward
                     if (context.toStep > context.fromStep) {
                         const currentStep = context.fromStep;
