@@ -227,6 +227,7 @@ if (isset($_SESSION['form_data'])) {
         <div class="col-md-6">
           <div class="create-user-card">
             <form class="form-horizontal" enctype="multipart/form-data" action="user" method="POST" id="userForm">
+              <input type="hidden" name="regUser" value="1">
               <div class="card-body">
                 <h4 class="card-title" style="font-weight: 600; color: #334155; margin-bottom: 20px;"><i class="fas fa-user-plus" style="color: #059669;"></i> Create New User</h4>
                 

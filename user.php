@@ -18,7 +18,7 @@ if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowed_roles)) {
 
 require_once('db/db.php');
 
-if (isset($_POST["regUser"])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Check if required fields are set
     if (empty($_POST['serviceNo']) || empty($_POST['userRole']) || empty($_POST['fname']) || empty($_POST['lname'])) {
         $_SESSION['error'] = "Required fields are missing!";
