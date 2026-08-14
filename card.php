@@ -61,12 +61,7 @@ $last_print = $total_prints > 0 ? $previous_prints[0] : null;
 mysqli_stmt_close($history_stmt);
 // ============ END CHECK ============
 
-// ============ LOG THE PRINT - ONLY IF NOT VIEW-ONLY ============
-if (!empty($id) && !$view_only) {
-    $print_method = $bulk ? 'bulk' : 'single';
-    logPrintedCard($conn, $id, $print_method);
-}
-// ============ END LOGGING ============
+// Print logging is now handled client-side via AJAX on window.afterprint event
 
 $sqluse = "SELECT emp.serviceNo, emp.surname, emp.firstName, 
           emp.signature, emp.middleName, emp.bloodType, emp2.currentRank
@@ -1241,6 +1236,32 @@ if (!isViewOnly) {
         }
     });
 }
+
+// Log printing when user actually interacts with printer dialogue
+window.addEventListener('afterprint', function() {
+    if (!isViewOnly) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const batchId = urlParams.get('batch_id') || '';
+        
+        fetch('ajax-log-print', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'serviceNo=' + encodeURIComponent(serviceNo) +
+                  '&print_method=' + encodeURIComponent(isBulk ? 'bulk' : 'single') +
+                  '&batch_id=' + encodeURIComponent(batchId)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Print logged successfully via AJAX:', data);
+            showPrintSuccess();
+        })
+        .catch(err => {
+            console.error('Failed to log print job via AJAX:', err);
+        });
+    }
+});
 </script>
 
 </body>

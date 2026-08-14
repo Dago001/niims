@@ -1843,18 +1843,6 @@ function printSelected() {
     currentPrintIndex = 0;
     isPrinting = true;
     
-    // Log bulk print batch via AJAX
-    selectedRecords.forEach(record => {
-        fetch('ajax-log-print.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: 'serviceNo=' + encodeURIComponent(record.serviceNo) + 
-                  '&method=bulk&batchId=' + encodeURIComponent(batchId)
-        }).catch(err => console.log('Logging error:', err));
-    });
-    
     // Start printing process
     printNextCard();
 }
@@ -1885,7 +1873,7 @@ function printSelected() {
             
             // Open print window
             const printWindow = window.open(
-                `card.php?id=${encodeURIComponent(record.serviceNo)}&popup=1&bulk=1`,
+                `card.php?id=${encodeURIComponent(record.serviceNo)}&popup=1&bulk=1&batch_id=${encodeURIComponent(batchId)}`,
                 `print_${record.serviceNo}_${Date.now()}`,
                 'width=900,height=700,scrollbars=yes,resizable=yes,toolbar=no,location=no,status=no,menubar=no'
             );
