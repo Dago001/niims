@@ -20,3 +20,10 @@ photo/
 *backup*
 backup/
 temp/
+
+# Database dumps (contain real personnel/user data)
+*.sql
+
+# Secrets / local-only credentials
+posting/includes/db_credentials.php
+*.env

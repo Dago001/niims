@@ -1,4 +1,20 @@
+# Never let the web server hand out DB dumps, logs, config or backup files
+# directly — these should only ever be reached through PHP, never as
+# static downloads.
+<FilesMatch "\.(sql|log|env|ini|bak|zip|gz|tar|rnd)$">
+    Require all denied
+</FilesMatch>
+
+# No directory listings anywhere in the site.
+Options -Indexes
+
+# These folders hold PHP files that are only ever include()'d by other
+# scripts (database credentials, auth helpers) — they are never meant to
+# be requested directly.
 RewriteEngine On
+RewriteRule ^db/ - [F,L]
+RewriteRule ^posting/includes/ - [F,L]
+
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME}.php -f

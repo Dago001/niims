@@ -39,10 +39,29 @@ try {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
         mysqli_query($conn, $create_table_sql);
 
-        // Seed default API key for local/testing applications
-        $default_key = "niims_sec_token_86f5c88c7b80a1e359";
-        $insert_key_sql = "INSERT INTO tbl_api_keys (client_name, api_key) VALUES ('Default External App', '$default_key')";
-        mysqli_query($conn, $insert_key_sql);
+        // No default key is seeded. An administrator must insert a freshly
+        // generated key directly into tbl_api_keys for each real client.
+    }
+
+    // A fixed API key value was previously hardcoded in this file and committed
+    // to source control, so it must be treated as permanently compromised.
+    // Deactivate it wherever it may already exist, on every environment.
+    $leaked_key = "niims_sec_token_86f5c88c7b80a1e359";
+    $revoke_stmt = mysqli_prepare($conn, "UPDATE tbl_api_keys SET is_active = 0 WHERE api_key = ?");
+    mysqli_stmt_bind_param($revoke_stmt, "s", $leaked_key);
+    mysqli_stmt_execute($revoke_stmt);
+    mysqli_stmt_close($revoke_stmt);
+
+    // 1b. Initialize rate limit tracking table
+    $rl_check = mysqli_query($conn, "SHOW TABLES LIKE 'tbl_api_rate_limit'");
+    if (mysqli_num_rows($rl_check) == 0) {
+        mysqli_query($conn, "CREATE TABLE tbl_api_rate_limit (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            bucket_key VARCHAR(64) NOT NULL,
+            window_start INT NOT NULL,
+            request_count INT NOT NULL DEFAULT 0,
+            UNIQUE KEY bucket_key (bucket_key)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
     }
 } catch (Exception $e) {
     sendResponse(500, "Database table initialization failure: " . $e->getMessage());
@@ -54,21 +73,44 @@ $api_key = "";
 // Check X-API-Key Header
 if (isset($_SERVER['HTTP_X_API_KEY'])) {
     $api_key = $_SERVER['HTTP_X_API_KEY'];
-} 
+}
 // Check Authorization Bearer Header
 elseif (isset($_SERVER['HTTP_AUTHORIZATION'])) {
     $auth_header = $_SERVER['HTTP_AUTHORIZATION'];
     if (preg_match('/Bearer\s(\S+)/', $auth_header, $matches)) {
         $api_key = $matches[1];
     }
-} 
-// Check Query Parameter fallback
-elseif (isset($_GET['api_key'])) {
-    $api_key = $_GET['api_key'];
 }
+// NOTE: no query-string (?api_key=) fallback — keys in URLs end up in access
+// logs, browser history and Referer headers.
 
 if (empty($api_key)) {
-    sendResponse(401, "Authentication failed: Missing API Key in request headers or parameters.");
+    sendResponse(401, "Authentication failed: Missing API Key in request headers.");
+}
+
+// 2b. Rate limit by API key (60 requests / minute)
+$rate_limit_max = 60;
+$rate_window_seconds = 60;
+$window_start = intdiv(time(), $rate_window_seconds) * $rate_window_seconds;
+$bucket_key = hash('sha256', $api_key) . ':' . $window_start;
+
+mysqli_query($conn, "DELETE FROM tbl_api_rate_limit WHERE window_start < " . (int)($window_start - $rate_window_seconds * 5));
+
+$rl_stmt = mysqli_prepare($conn, "INSERT INTO tbl_api_rate_limit (bucket_key, window_start, request_count) VALUES (?, ?, 1)
+    ON DUPLICATE KEY UPDATE request_count = request_count + 1");
+mysqli_stmt_bind_param($rl_stmt, "si", $bucket_key, $window_start);
+mysqli_stmt_execute($rl_stmt);
+mysqli_stmt_close($rl_stmt);
+
+$rl_check_stmt = mysqli_prepare($conn, "SELECT request_count FROM tbl_api_rate_limit WHERE bucket_key = ?");
+mysqli_stmt_bind_param($rl_check_stmt, "s", $bucket_key);
+mysqli_stmt_execute($rl_check_stmt);
+mysqli_stmt_bind_result($rl_check_stmt, $current_count);
+mysqli_stmt_fetch($rl_check_stmt);
+mysqli_stmt_close($rl_check_stmt);
+
+if ($current_count > $rate_limit_max) {
+    sendResponse(429, "Too Many Requests: rate limit of {$rate_limit_max} requests/minute exceeded.");
 }
 
 // Verify key in database

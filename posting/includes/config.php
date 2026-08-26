@@ -6,10 +6,19 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-$db_host = 'localhost';
-$db_user = 'niimscom';
-$db_pass = '#qiWco[8GY585I';
-$db_name = 'niimscom_personnel_db';
+// Credentials live outside version control — see db_credentials.php (gitignored).
+// The values that used to be hardcoded here were committed to git and must be
+// treated as compromised; rotate them on the server and update that file.
+$db_credentials_file = __DIR__ . '/db_credentials.php';
+if (!file_exists($db_credentials_file)) {
+    die('Database configuration missing: ' . $db_credentials_file . ' not found.');
+}
+$db_credentials = require $db_credentials_file;
+
+$db_host = $db_credentials['host'];
+$db_user = $db_credentials['user'];
+$db_pass = $db_credentials['pass'];
+$db_name = $db_credentials['name'];
 
 try {
     $pdo = new PDO(

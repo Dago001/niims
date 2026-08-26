@@ -5,7 +5,7 @@ class GoogleAuthenticator {
     public static function generateSecret($length = 16) {
         $secret = '';
         for ($i = 0; $i < $length; $i++) {
-            $secret .= self::$_base32Chars[rand(0, 31)];
+            $secret .= self::$_base32Chars[random_int(0, 31)];
         }
         return $secret;
     }
@@ -22,7 +22,7 @@ class GoogleAuthenticator {
         $currentTimeSlice = floor(time() / 30);
         for ($i = -$discrepancy; $i <= $discrepancy; $i++) {
             $calculatedCode = self::getCode($secret, $currentTimeSlice + $i);
-            if ($calculatedCode === $code) {
+            if (hash_equals($calculatedCode, (string) $code)) {
                 return true;
             }
         }

@@ -49,18 +49,19 @@ function sanitize_input($data) {
 
 /**
  * Validate username format
+ * Usernames are Service Numbers, which are numeric-only.
  */
 function validate_username($username) {
-    // Allow only alphanumeric characters, underscore, dot, and hyphen
-    if (!preg_match('/^[a-zA-Z0-9._-]+$/', $username)) {
+    // Allow digits only
+    if (!preg_match('/^[0-9]+$/', $username)) {
         return false;
     }
-    
+
     // Length validation
-    if (strlen($username) < 3 || strlen($username) > 50) {
+    if (strlen($username) < 3 || strlen($username) > 20) {
         return false;
     }
-    
+
     return true;
 }
 
@@ -97,32 +98,35 @@ function log_security_event($event, $user_id = null, $ip = null) {
 }
 
 /**
- * Check for brute force attempts
+ * Check for brute force attempts.
+ *
+ * Tracked server-side in tbl_login_attempts (keyed by IP+username) rather
+ * than in $_SESSION — a session-based counter is trivially bypassed by an
+ * attacker simply dropping cookies between attempts.
  */
 function check_brute_force($username) {
+    global $conn;
     $max_attempts = 5;
     $lockout_time = 900; // 15 minutes in seconds
-    
+
     $ip = $_SERVER['REMOTE_ADDR'];
-    $cache_key = "brute_force_{$ip}_{$username}";
-    
-    if (isset($_SESSION[$cache_key])) {
-        list($attempts, $first_attempt) = explode('|', $_SESSION[$cache_key]);
-        
-        if ($attempts >= $max_attempts) {
-            $time_elapsed = time() - $first_attempt;
-            
-            if ($time_elapsed < $lockout_time) {
-                $remaining_time = $lockout_time - $time_elapsed;
-                log_security_event("BRUTE_FORCE_LOCKOUT", $username);
-                return "Too many failed attempts. Please try again in " . ceil($remaining_time / 60) . " minutes.";
-            } else {
-                // Reset after lockout period
-                unset($_SESSION[$cache_key]);
-            }
-        }
+    $identifier = $ip . '|' . $username;
+    $cutoff = time() - $lockout_time;
+
+    $stmt = mysqli_prepare($conn, "SELECT COUNT(*), MIN(attempt_time) FROM tbl_login_attempts WHERE identifier = ? AND attempt_time >= ?");
+    mysqli_stmt_bind_param($stmt, "si", $identifier, $cutoff);
+    mysqli_stmt_execute($stmt);
+    mysqli_stmt_bind_result($stmt, $attempts, $first_attempt);
+    mysqli_stmt_fetch($stmt);
+    mysqli_stmt_close($stmt);
+
+    if ($attempts >= $max_attempts) {
+        $time_elapsed = time() - (int) $first_attempt;
+        $remaining_time = $lockout_time - $time_elapsed;
+        log_security_event("BRUTE_FORCE_LOCKOUT", $username);
+        return "Too many failed attempts. Please try again in " . ceil($remaining_time / 60) . " minutes.";
     }
-    
+
     return null;
 }
 
@@ -130,18 +134,19 @@ function check_brute_force($username) {
  * Record failed login attempt
  */
 function record_failed_attempt($username) {
+    global $conn;
     $ip = $_SERVER['REMOTE_ADDR'];
-    $cache_key = "brute_force_{$ip}_{$username}";
-    
-    if (isset($_SESSION[$cache_key])) {
-        list($attempts, $first_attempt) = explode('|', $_SESSION[$cache_key]);
-        $attempts++;
-    } else {
-        $attempts = 1;
-        $first_attempt = time();
-    }
-    
-    $_SESSION[$cache_key] = "{$attempts}|{$first_attempt}";
+    $identifier = $ip . '|' . $username;
+    $now = time();
+
+    $stmt = mysqli_prepare($conn, "INSERT INTO tbl_login_attempts (identifier, attempt_time) VALUES (?, ?)");
+    mysqli_stmt_bind_param($stmt, "si", $identifier, $now);
+    mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
+
+    // Opportunistically purge old rows so the table doesn't grow forever.
+    mysqli_query($conn, "DELETE FROM tbl_login_attempts WHERE attempt_time < " . (int) ($now - 86400));
+
     log_security_event("FAILED_LOGIN", $username);
 }
 
@@ -149,12 +154,14 @@ function record_failed_attempt($username) {
  * Clear failed attempts on successful login
  */
 function clear_failed_attempts($username) {
+    global $conn;
     $ip = $_SERVER['REMOTE_ADDR'];
-    $cache_key = "brute_force_{$ip}_{$username}";
-    
-    if (isset($_SESSION[$cache_key])) {
-        unset($_SESSION[$cache_key]);
-    }
+    $identifier = $ip . '|' . $username;
+
+    $stmt = mysqli_prepare($conn, "DELETE FROM tbl_login_attempts WHERE identifier = ?");
+    mysqli_stmt_bind_param($stmt, "s", $identifier);
+    mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
 }
 
 /**
@@ -216,6 +223,17 @@ if (mysqli_num_rows($check_secret_col) == 0) {
 $check_enabled_col = mysqli_query($conn, "SHOW COLUMNS FROM tbl_users LIKE 'google_auth_enabled'");
 if (mysqli_num_rows($check_enabled_col) == 0) {
     mysqli_query($conn, "ALTER TABLE tbl_users ADD google_auth_enabled TINYINT(1) DEFAULT 0");
+}
+
+// Server-side brute-force tracking table (see check_brute_force/record_failed_attempt)
+$check_attempts_table = mysqli_query($conn, "SHOW TABLES LIKE 'tbl_login_attempts'");
+if (mysqli_num_rows($check_attempts_table) == 0) {
+    mysqli_query($conn, "CREATE TABLE tbl_login_attempts (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        identifier VARCHAR(191) NOT NULL,
+        attempt_time INT NOT NULL,
+        INDEX idx_identifier_time (identifier, attempt_time)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 }
 
 // Initialize variables
@@ -908,9 +926,10 @@ if (empty($_SESSION['csrf_token'])) {
                             <?php endif; ?>
                             
                             <div>
-                                <input type="text" name="username" class="form-control" placeholder="Username" required 
-                                       value="<?php echo isset($_POST['username']) ? htmlspecialchars($_POST['username']) : ''; ?>" 
-                                       autocomplete="username" maxlength="50" />
+                                <input type="text" name="username" class="form-control" placeholder="Service Number" required
+                                       value="<?php echo isset($_POST['username']) ? htmlspecialchars($_POST['username']) : ''; ?>"
+                                       autocomplete="username" maxlength="20" inputmode="numeric" pattern="[0-9]*"
+                                       oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
                             </div>
                             <div class="password-wrapper">
                                 <input type="password" name="password" id="password" class="form-control" placeholder="Password" required 
@@ -923,18 +942,11 @@ if (empty($_SESSION['csrf_token'])) {
                             <!-- CAPTCHA Section -->
                             <div class="captcha-container">
                                 <div class="captcha-code" id="captchaDisplay">
-                                    <?php 
-                                    $c_code = $_SESSION['captcha_code'];
-                                    for ($i = 0; $i < strlen($c_code); $i++) {
-                                        $angle = rand(-30, 30);
-                                        echo '<span class="captcha-char" style="--angle: ' . $angle . 'deg;">' 
-                                             . htmlspecialchars($c_code[$i]) 
-                                             . '<span class="captcha-strike"></span>'
-                                             . '</span>';
-                                    }
-                                    ?>
+                                    <img id="captchaImg" src="captcha_image.php?t=<?php echo time(); ?>"
+                                         alt="CAPTCHA code" width="180" height="60"
+                                         style="display:block;margin:0 auto;border-radius:4px;border:1px solid #ccc;">
                                 </div>
-                                <input type="text" name="captcha" class="form-control captcha-input" placeholder="Enter CAPTCHA code" required 
+                                <input type="text" name="captcha" class="form-control captcha-input" placeholder="Enter CAPTCHA code" required
                                        maxlength="6" autocomplete="off" oninput="this.value = this.value.toUpperCase()" />
                                 <div class="captcha-controls">
                                     <a class="refresh-captcha" onclick="refreshCaptcha()" style="cursor: pointer;">
@@ -1048,41 +1060,31 @@ if (empty($_SESSION['csrf_token'])) {
             });
         }
         
-        // Refresh CAPTCHA
+        // Refresh CAPTCHA — reloading the image itself generates a fresh
+        // code server-side (see captcha_image.php); nothing is fetched
+        // or read out of the page as text.
         function refreshCaptcha() {
-            fetch('refresh_captcha.php')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        let captchaHtml = '';
-                        for (let i = 0; i < data.captcha.length; i++) {
-                            const angle = Math.floor(Math.random() * 61) - 30;
-                            captchaHtml += `<span class="captcha-char" style="--angle: ${angle}deg;">${data.captcha[i]}<span class="captcha-strike"></span></span>`;
-                        }
-                        const display = document.getElementById('captchaDisplay');
-                        if (display) display.innerHTML = captchaHtml;
-                        const err = document.getElementById('captchaError');
-                        if (err) err.style.display = 'none';
-                        const input = document.querySelector('input[name="captcha"]');
-                        if (input) input.value = '';
-                    }
-                })
-                .catch(error => console.error('Error refreshing CAPTCHA:', error));
+            const img = document.getElementById('captchaImg');
+            if (img) img.src = 'captcha_image.php?t=' + Date.now();
+            const err = document.getElementById('captchaError');
+            if (err) err.style.display = 'none';
+            const input = document.querySelector('input[name="captcha"]');
+            if (input) input.value = '';
         }
 
         // Client-side validation
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             const usernameInput = document.querySelector('input[name="username"]');
             if (usernameInput) {
-                // Validate username format
-                const usernameRegex = /^[a-zA-Z0-9._-]+$/;
+                // Validate username format — Service Numbers are numeric only
+                const usernameRegex = /^[0-9]+$/;
                 if (!usernameRegex.test(usernameInput.value)) {
                     e.preventDefault();
-                    alert('Username can only contain letters, numbers, dots, hyphens, and underscores.');
+                    alert('Username (Service Number) can only contain numbers.');
                     usernameInput.focus();
                     return false;
                 }
-                
+
                 // Validate password length
                 const passwordInput = document.getElementById('password');
                 if (passwordInput.value.length < 8) {
@@ -1092,27 +1094,16 @@ if (empty($_SESSION['csrf_token'])) {
                     return false;
                 }
 
-                // Validate CAPTCHA
-                const captchaInput = document.querySelector('input[name="captcha"]');
-                if (captchaInput) {
-                    const captchaDisplay = document.getElementById('captchaDisplay');
-                    const captchaText = captchaDisplay.textContent.replace(/[^A-Z0-9]/g, '');
-                    if (captchaInput.value.toUpperCase() !== captchaText) {
-                        e.preventDefault();
-                        const err = document.getElementById('captchaError');
-                        if (err) err.style.display = 'block';
-                        captchaInput.focus();
-                        captchaInput.select();
-                        return false;
-                    }
-                }
+                // CAPTCHA correctness is validated server-side against the
+                // image that was actually rendered — there is nothing to
+                // check client-side since the answer isn't present in the DOM.
             }
-            
+
             // Disable submit button to prevent double submission
             const submitButton = this.querySelector('button[type="submit"]');
             submitButton.disabled = true;
             submitButton.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
-            
+
             return true;
         });
         
