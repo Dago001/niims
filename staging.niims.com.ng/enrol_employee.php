@@ -67,14 +67,14 @@ include 'top-navigation.php';
         }
         /* Button styling */
         #submitBtn {
-            background: linear-gradient(45deg, #3085d6, #1c6ea4);
+            background: linear-gradient(45deg, #0e7a2e, #1c6ea4);
             border: none;
             padding: 12px 30px;
             font-weight: 600;
             transition: all 0.3s ease;
         }
         #submitBtn:hover {
-            background: linear-gradient(45deg, #1c6ea4, #3085d6);
+            background: linear-gradient(45deg, #1c6ea4, #0e7a2e);
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
@@ -932,7 +932,7 @@ include 'top-navigation.php';
                         icon: 'warning',
                         title: 'Incomplete Form',
                         html: 'Please fill in all required fields in all steps.<br>Red highlighted fields are required.',
-                        confirmButtonColor: '#3085d6',
+                        confirmButtonColor: '#0e7a2e',
                         confirmButtonText: 'OK'
                     });
                     
@@ -979,7 +979,7 @@ include 'top-navigation.php';
                             title: 'Record Saved Successfully!',
                             html: '<strong>Employee record has been saved.</strong><br><br>' +
                                   '',
-                            confirmButtonColor: '#3085d6',
+                            confirmButtonColor: '#0e7a2e',
                             confirmButtonText: 'OK'
                         }).then((result) => {
                             // Always redirect to myenrolments.php
@@ -1005,7 +1005,7 @@ include 'top-navigation.php';
                     text: 'Are you sure you want to reset all form data?',
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
+                    confirmButtonColor: '#0e7a2e',
                     cancelButtonColor: '#d33',
                     confirmButtonText: 'Yes, reset it!',
                     cancelButtonText: 'No, keep data'

@@ -9,6 +9,13 @@ ini_set('display_errors', 0);
 // Start session
 session_start();
 
+if (!isset($_SESSION['username'])) {
+    http_response_code(401);
+    header('Content-Type: application/json');
+    echo json_encode(['success' => false, 'message' => 'Unauthorized.', 'type' => 'error']);
+    exit;
+}
+
 // Include database connection
 require_once('db/db.php');
 
@@ -63,6 +70,9 @@ try {
     $pfa = mysqli_real_escape_string($conn, $_POST['pfa'] ?? '');
     $rsa = mysqli_real_escape_string($conn, $_POST['rsa'] ?? '');
     $nhf = mysqli_real_escape_string($conn, $_POST['nhf'] ?? '');
+    $directorate = mysqli_real_escape_string($conn, $_POST['directorate'] ?? '');
+    $unit = mysqli_real_escape_string($conn, $_POST['unit'] ?? '');
+    $postingOther = mysqli_real_escape_string($conn, $_POST['posting_other'] ?? '');
     $user_id = mysqli_real_escape_string($conn, $_POST['logged_in'] ?? $_SESSION['user_id'] ?? '');
     $date_of_entry = date("Y/m/d");
 
@@ -88,6 +98,15 @@ try {
         $response['type'] = 'warning';
         echo json_encode($response);
         exit;
+    }
+
+    // Ensure the SHQ directorate/unit/other columns exist (self-healing schema,
+    // consistent with the pattern used elsewhere in this app).
+    $col_check = mysqli_query($conn, "SHOW COLUMNS FROM tbl_employment LIKE 'directorate'");
+    if (mysqli_num_rows($col_check) == 0) {
+        mysqli_query($conn, "ALTER TABLE tbl_employment ADD directorate VARCHAR(150) DEFAULT NULL");
+        mysqli_query($conn, "ALTER TABLE tbl_employment ADD unit VARCHAR(150) DEFAULT NULL");
+        mysqli_query($conn, "ALTER TABLE tbl_employment ADD posting_other VARCHAR(100) DEFAULT NULL");
     }
 
     // Start transaction
@@ -116,7 +135,15 @@ try {
     // Execute all queries
     $queries = [];
     $queries[] = mysqli_query($conn, $insertion);
-    $queries[] = mysqli_query($conn, "INSERT INTO tbl_employment VALUES('', '$NISNo', '$dofa','$dopa', '$presentPosting', '$currentRank', 'Active', '$date_of_entry')");
+    // Named columns (rather than the previous bare VALUES(...) list) — tbl_employment
+    // has grown extra columns (disciplinary_status, promotion_eligibility, etc.) since
+    // this insert was written, and a positional VALUES list with too few values fails
+    // outright ("Column count doesn't match value count"), so every enrolment was
+    // silently failing before this fix. Columns not listed here just take their
+    // table defaults.
+    $queries[] = mysqli_query($conn, "INSERT INTO tbl_employment
+        (serviceNo, dofa, dopa, presentPosting, currentRank, empStatus, date_of_entry, directorate, unit, posting_other)
+        VALUES ('$NISNo', '$dofa', '$dopa', '$presentPosting', '$currentRank', 'Active', '$date_of_entry', '$directorate', '$unit', '$postingOther')");
     $queries[] = mysqli_query($conn, "INSERT INTO tbl_qualification VALUES('', '$NISNo', '$qualification','$institution', '$certificateNo','$dateObtained', '$date_of_entry')");
     $queries[] = mysqli_query($conn, "INSERT INTO tbl_nok VALUES('', '$NISNo', '$nok','$nok_relationship','$nok_phone', '$date_of_entry')");
     $queries[] = mysqli_query($conn, "INSERT INTO tbl_finance VALUES('', '$NISNo', '$ippis', '$bank','$account_number','$pfa', '$rsa','$nhf','$date_of_entry')");

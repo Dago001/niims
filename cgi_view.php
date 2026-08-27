@@ -7,6 +7,7 @@ if (!isset($_SESSION['username'])) {
 }
 
 require_once('db/db.php');
+require_once('functions/posting_helper.php');
 
 if ($_SESSION['role'] == "Admin") {
     include 'sidebar-admin.php';
@@ -71,9 +72,10 @@ if ($count_result) {
 mysqli_stmt_close($count_stmt);
 
 // OPTIMIZED QUERY: Using prepared statements for security
-$sqluse = "SELECT DISTINCT emp.serviceNo, emp.surname, emp.firstName, emp.phone, 
-                  emp.middleName, emp.bloodType, emp2.currentRank, emp2.presentPosting
-           FROM tbl_emppersonal emp 
+$sqluse = "SELECT DISTINCT emp.serviceNo, emp.surname, emp.firstName, emp.phone,
+                  emp.middleName, emp.bloodType, emp2.currentRank, emp2.presentPosting,
+                  emp2.directorate, emp2.unit, emp2.posting_other
+           FROM tbl_emppersonal emp
            INNER JOIN tbl_employment emp2 ON emp.serviceNo = emp2.serviceNo";
            
 if (!empty($search_condition)) {
@@ -814,7 +816,12 @@ $numb = $retrieve ? mysqli_num_rows($retrieve) : 0;
                                             $firstName = htmlspecialchars($ret['firstName']);
                                             $middleName = htmlspecialchars($ret['middleName']);
                                             $rank = htmlspecialchars($ret['currentRank']);
-                                            $posting = htmlspecialchars($ret['presentPosting']);
+                                            $posting = htmlspecialchars(formatPresentPosting(
+                                                $ret['presentPosting'],
+                                                $ret['directorate'] ?? '',
+                                                $ret['unit'] ?? '',
+                                                $ret['posting_other'] ?? ''
+                                            ));
                                             $phone = htmlspecialchars($ret['phone']);
                                             $bloodType = htmlspecialchars($ret['bloodType']);
                                             

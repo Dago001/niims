@@ -1128,7 +1128,7 @@ $numb = $retrieve ? mysqli_num_rows($retrieve) : 0;
         // NEW VIEW FUNCTION
         function viewOfficer(serviceNo) {
             showLoading();
-            window.location.href = 'displayer?id=' + encodeURIComponent(serviceNo);
+            window.location.href = 'view_employee?id=' + encodeURIComponent(serviceNo);
         }
         
         // Handle page load

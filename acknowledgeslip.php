@@ -1,5 +1,11 @@
 <?php
 session_start();
+
+if (!isset($_SESSION['username'])) {
+    header("Location: index");
+    die();
+}
+
 include("db/db.php");
 require "vendors/autoload.php";
 include "vendors/phpqrcode/qrlib.php";
@@ -34,12 +40,14 @@ echo "<img src=\"barcode.png\" alt=\"Barcode\">"; */
             }
     </style>
     <?php 
-            $id = $_GET['id'];
+            $id = isset($_GET['id']) ? $_GET['id'] : '';
 
-
-            $sqluse = "SELECT * FROM tbl_employee WHERE serviceNo=$id";
-            $retrieve = mysqli_query($conn, $sqluse);
-            $numb = mysqli_num_rows($retrieve); 
+            $sqluse = "SELECT * FROM tbl_employee WHERE serviceNo = ?";
+            $stmt = mysqli_prepare($conn, $sqluse);
+            mysqli_stmt_bind_param($stmt, "s", $id);
+            mysqli_stmt_execute($stmt);
+            $retrieve = mysqli_stmt_get_result($stmt);
+            $numb = mysqli_num_rows($retrieve);
             while ($foundk = mysqli_fetch_array($retrieve)) {
                 $profile = $foundk['serviceNo'];
                 $name = $foundk['currentRank'];

@@ -66,7 +66,7 @@
 	?>
 
 	<form method="post" action="signature_upload">
-		<h4>NIS: <input type="text" name="user_id" value="<?php echo $_GET['id'];  ?>" readonly></h4> 
+		<h4>NIS: <input type="text" name="user_id" value="<?php echo htmlspecialchars($id, ENT_QUOTES); ?>" readonly></h4>
 		<div id="sig"></div>
 		<p style="clear: both;">
 			<!-- <button id="disable">Disable</button> --> 
@@ -81,7 +81,7 @@
 		</form>
 <script type="text/javascript">
     var sig = $('#sig').signature({syncField: '#signature64', syncFormat: 'PNG'});
-	var empid = <?php $_GET['id']; ?>
+	var empid = <?php echo json_encode($id); ?>;
     $('#clear').click(function(e) {
         e.preventDefault();
         sig.signature('clear');

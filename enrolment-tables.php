@@ -10,6 +10,7 @@ session_start();
         die();
   }
   require_once ('db/db.php');
+  require_once ('functions/posting_helper.php');
 
   if ($_SESSION['role'] == "Admin") 
   {
@@ -23,8 +24,8 @@ session_start();
   include 'menu-footer-buttons.php';
   include 'top-navigation.php';
 
-      $sqluse = "SELECT emp.serviceNo, emp.surname, emp.firstName, emp.phone, emp.middleName, emp.bloodType,emp2.currentRank,emp2.presentPosting
-      FROM tbl_emppersonal emp INNER JOIN tbl_employment emp2 
+      $sqluse = "SELECT emp.serviceNo, emp.surname, emp.firstName, emp.phone, emp.middleName, emp.bloodType,emp2.currentRank,emp2.presentPosting, emp2.directorate, emp2.unit, emp2.posting_other
+      FROM tbl_emppersonal emp INNER JOIN tbl_employment emp2
       ON emp.serviceNo = emp2.serviceNo";
       $retrieve = mysqli_query($conn, $sqluse);
       $numb = mysqli_num_rows($retrieve); 
@@ -88,7 +89,12 @@ session_start();
                           <td><?php echo $ret['serviceNo']; ?></td>
                           <td><?php echo strtoupper($ret['surname'] . ' ' . $ret['middleName'] . ' ' . $ret['firstName']); ?></td>
                           <td><?php echo $ret['currentRank']; ?></td>
-                          <td><?php echo $ret['presentPosting']; ?></td>
+                          <td><?php echo htmlspecialchars(formatPresentPosting(
+                              $ret['presentPosting'],
+                              $ret['directorate'] ?? '',
+                              $ret['unit'] ?? '',
+                              $ret['posting_other'] ?? ''
+                          )); ?></td>
                           <!--<td><?php //echo $ret['phone']; ?></td>-->
                           <td><?php echo $ret['bloodType']; ?></td>
                            <!--<td> <button class="btn btn-success" type="submit" 

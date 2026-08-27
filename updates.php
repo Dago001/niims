@@ -1,13 +1,28 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+error_reporting(0);
+ini_set('display_errors', 0);
 session_start();
 
+// Every action below writes to the database (passwords, roles, personal
+// records) — none of it may run for an unauthenticated request.
+if (!isset($_SESSION['username'])) {
+    header("Location: index");
+    exit();
+}
+
 require_once('db/db.php');
+require_once('functions/password_helper.php');
 
 // ======= USER PROFILE UPDATE =======
+// Touches tbl_users (role, password, account details) — same access bar as
+// createuser.php / edit.php, not just "logged in".
 if (isset($_POST["updateProfile"])) {
-    
+
+    $allowed_roles = ['Admin', 'SuperAdmin', 'Supervisor'];
+    if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowed_roles)) {
+        die("Access Denied. You are not authorized to perform this action.");
+    }
+
     // Get and sanitize form data
     $user_id = mysqli_real_escape_string($conn, $_POST['serviceNo']);
     $firstname = mysqli_real_escape_string($conn, $_POST['fname']);
@@ -29,6 +44,13 @@ if (isset($_POST["updateProfile"])) {
     // Handle optional password
     if (!empty($_POST['password'])) {
         $password = $_POST['password'];
+        $policyCheck = validatePasswordPolicy($password);
+        if ($policyCheck !== true) {
+            $_SESSION['profile_update_error'] = true;
+            $_SESSION['profile_update_message'] = $policyCheck;
+            header("Location: edit?id=" . urlencode($user_id));
+            exit();
+        }
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
         $updateParts[] = "password = '$hashedPassword'";
     }
@@ -67,7 +89,7 @@ if (isset($_POST["updateProfile"])) {
         $_SESSION['profile_update_success'] = true;
         $_SESSION['profile_update_message'] = "User profile updated successfully!";
         $_SESSION['profile_updated_user_id'] = $user_id;
-        header("Location: edit-user");
+        header("Location: createuser?tab=manage");
         exit();
     } else {
         $_SESSION['profile_update_error'] = true;
@@ -145,23 +167,32 @@ if (isset($_POST["updatePassword"])) {
     $NISNo = $_POST['serviceNo'];
     $newPassword = $_POST['new_password'];
 
-    if (empty($newPassword) || strlen($newPassword) < 6) {
-        echo "Password must be at least 6 characters.";
+    if (empty($newPassword)) {
+        echo "Password is required.";
+        exit();
+    }
+    $policyCheck = validatePasswordPolicy($newPassword);
+    if ($policyCheck !== true) {
+        echo $policyCheck;
         exit();
     }
 
     $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
-    
-    // Use prepared statement
-    $update = "UPDATE tbl_users SET password = ? WHERE user_id = ?";
+
+    // Use prepared statement — also clears the mandatory-change flag so a
+    // user who was forced here on first login can proceed into the app.
+    $update = "UPDATE tbl_users SET password = ?, must_change_password = 0 WHERE user_id = ?";
     $stmt = mysqli_prepare($conn, $update);
     if ($stmt) {
         mysqli_stmt_bind_param($stmt, "ss", $hashedPassword, $NISNo);
         $insert = mysqli_stmt_execute($stmt);
         mysqli_stmt_close($stmt);
-        
+
         if ($insert) {
-            require_once('success.php');
+            $_SESSION['must_change_password'] = 0;
+            $redirect_target = (isset($_SESSION['role']) && $_SESSION['role'] == "Admin") ? "mainpage" : "landing";
+            header("Location: " . $redirect_target);
+            exit();
         } else {
             echo "Error updating password.";
         }

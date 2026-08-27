@@ -43,7 +43,7 @@ if ($print) {
                 <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Print Method:</strong></td>
                 <td style="padding: 8px 0; border-bottom: 1px solid #eee;">
                     <span style="padding: 2px 8px; border-radius: 4px; background: <?php echo $print['print_method'] == 'bulk' ? '#d1ecf1' : '#fff3cd'; ?>; color: <?php echo $print['print_method'] == 'bulk' ? '#0c5460' : '#856404'; ?>;">
-                        <?php echo ucfirst($print['print_method']); ?>
+                        <?php echo htmlspecialchars(ucfirst($print['print_method'])); ?>
                     </span>
                 </td>
             </tr>

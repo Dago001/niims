@@ -4,7 +4,8 @@ if (!isset($_SESSION['username'])) {
     header("HTTP/1.1 401 Unauthorized");
     exit(json_encode(['success' => false, 'message' => 'Unauthorized']));
 }
-error_reporting(E_ALL);
+error_reporting(0);
+ini_set('display_errors', 0);
 // save_photo.php - PHP script to handle image saving
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['image'])) {
     // The upload target is derived from the authenticated session, never from

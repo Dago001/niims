@@ -121,7 +121,6 @@
                     <ul class="nav child_menu">
 
                       <li><a href="createuser">Create User</a></li>
-                      <li><a href="edit-user">Edit User</a></li>
                       
                     </ul>
                   </li>-->

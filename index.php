@@ -317,6 +317,7 @@ if (isset($_POST['verify_2fa'])) {
                     $_SESSION['user_id'] = $row['user_id'];
                     $_SESSION['email'] = $row['email_address'];
                     $_SESSION['role'] = $row['user_role'];
+                    $_SESSION['must_change_password'] = !empty($row['must_change_password']) ? 1 : 0;
                     $_SESSION['logged_in'] = true;
                     $_SESSION['login_time'] = time();
                     $_SESSION['user_ip'] = $_SERVER['REMOTE_ADDR'];
@@ -328,8 +329,11 @@ if (isset($_POST['verify_2fa'])) {
                     unset($_SESSION['auth_temp_secret']);
                     
                     log_security_event("SUCCESSFUL_LOGIN", $temp_user);
-                    
-                    if ($_SESSION['role'] == "Admin") {
+
+                    if ($_SESSION['must_change_password']) {
+                        header("Location: changePassword");
+                        exit();
+                    } elseif ($_SESSION['role'] == "Admin") {
                         header("Location: mainpage");
                         exit();
                     } else {

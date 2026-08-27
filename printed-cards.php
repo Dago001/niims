@@ -964,8 +964,8 @@ $ranks_result = mysqli_query($conn, $ranks_sql);
                                         </span>
                                     </td>
                                     <td>
-                                        <span class="method-badge method-<?php echo $row['print_method']; ?>">
-                                            <?php echo ucfirst($row['print_method']); ?>
+                                        <span class="method-badge method-<?php echo $row['print_method'] === 'bulk' ? 'bulk' : 'single'; ?>">
+                                            <?php echo htmlspecialchars(ucfirst($row['print_method'])); ?>
                                         </span>
                                     </td>
                                     <td>

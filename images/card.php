@@ -1,11 +1,16 @@
 <?php
-error_reporting(E_ALL);
-  ini_set('display_errors', 1);
+error_reporting(0);
+ini_set('display_errors', 0);
 session_start();
 
-include("db/db.php");
-require "vendors/autoload.php";
-include "vendors/phpqrcode/qrlib.php";
+if (!isset($_SESSION['username'])) {
+    header("Location: ../index");
+    die();
+}
+
+include("../db/db.php");
+require "../vendors/autoload.php";
+include "../vendors/phpqrcode/qrlib.php";
 
 use Picqer\Barcode\BarcodeGeneratorPNG;
 

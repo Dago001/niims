@@ -79,7 +79,7 @@ unset($_SESSION['redirect_url']);
             title: 'Success!',
             text: '<?php echo addslashes($success_message); ?>',
             confirmButtonText: 'OK',
-            confirmButtonColor: '#3085d6',
+            confirmButtonColor: '#0e7a2e',
             allowOutsideClick: false,
             allowEscapeKey: false,
             showClass: {

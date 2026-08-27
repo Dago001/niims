@@ -1,4 +1,10 @@
-<?php 
+<?php
+// This page is public and unauthenticated by design (anyone scanning a
+// printed ID card's QR code lands here) — errors must never be shown to
+// the visitor since there's no login wall hiding them.
+error_reporting(0);
+ini_set('display_errors', 0);
+
 require_once('db/db.php');
 include 'menu-footer-buttons.php';
 
@@ -12,26 +18,44 @@ header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 
 // ============ RATE LIMITING ============
+// Tracked server-side by IP in the database, not in $_SESSION — a session
+// resets the moment a visitor drops their cookie (trivial for a script
+// scraping personnel records via this page), while a DB-backed counter
+// keyed purely on IP does not.
 session_start();
-$rate_limit_key = 'verify_attempts_' . $_SERVER['REMOTE_ADDR'];
 $rate_limit_time = 60;
 $rate_limit_max = 10;
+$client_ip = $_SERVER['REMOTE_ADDR'];
 
-if (!isset($_SESSION[$rate_limit_key])) {
-    $_SESSION[$rate_limit_key] = ['count' => 0, 'first_request' => time()];
+$check_va_table = mysqli_query($conn, "SHOW TABLES LIKE 'tbl_verification_attempts'");
+if (mysqli_num_rows($check_va_table) == 0) {
+    mysqli_query($conn, "CREATE TABLE tbl_verification_attempts (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        ip_address VARCHAR(45) NOT NULL,
+        attempt_time INT NOT NULL,
+        INDEX idx_ip_time (ip_address, attempt_time)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 }
 
-$rate_data = $_SESSION[$rate_limit_key];
+$cutoff = time() - $rate_limit_time;
+$count_stmt = mysqli_prepare($conn, "SELECT COUNT(*), MIN(attempt_time) FROM tbl_verification_attempts WHERE ip_address = ? AND attempt_time >= ?");
+mysqli_stmt_bind_param($count_stmt, "si", $client_ip, $cutoff);
+mysqli_stmt_execute($count_stmt);
+mysqli_stmt_bind_result($count_stmt, $attempt_count, $first_attempt_time);
+mysqli_stmt_fetch($count_stmt);
+mysqli_stmt_close($count_stmt);
 
-if (time() - $rate_data['first_request'] > $rate_limit_time) {
-    $_SESSION[$rate_limit_key] = ['count' => 0, 'first_request' => time()];
-    $rate_data = $_SESSION[$rate_limit_key];
-}
+$log_stmt = mysqli_prepare($conn, "INSERT INTO tbl_verification_attempts (ip_address, attempt_time) VALUES (?, ?)");
+$now = time();
+mysqli_stmt_bind_param($log_stmt, "si", $client_ip, $now);
+mysqli_stmt_execute($log_stmt);
+mysqli_stmt_close($log_stmt);
 
-$rate_data['count']++;
-$_SESSION[$rate_limit_key] = $rate_data;
+// Opportunistically purge old rows so the table doesn't grow forever.
+mysqli_query($conn, "DELETE FROM tbl_verification_attempts WHERE attempt_time < " . (int) ($now - 86400));
 
-if ($rate_data['count'] > $rate_limit_max) {
+if ($attempt_count >= $rate_limit_max) {
+    $retry_after = $rate_limit_time - (time() - (int) $first_attempt_time);
     http_response_code(429);
     ?>
     <!DOCTYPE html>
@@ -55,10 +79,10 @@ if ($rate_data['count'] > $rate_limit_max) {
             <div class="error-icon"><i class="fas fa-shield-alt"></i></div>
             <h2>Too Many Requests</h2>
             <p>For security purposes, you have exceeded the maximum number of verification attempts.</p>
-            <p>Please wait <span class="countdown" id="countdown">60</span> seconds before trying again.</p>
+            <p>Please wait <span class="countdown" id="countdown"><?php echo max(0, $retry_after); ?></span> seconds before trying again.</p>
         </div>
         <script>
-            let seconds = <?php echo $rate_limit_time - (time() - $rate_data['first_request']); ?>;
+            let seconds = <?php echo max(0, $retry_after); ?>;
             const countdownEl = document.getElementById('countdown');
             const interval = setInterval(() => {
                 seconds--;
@@ -90,9 +114,37 @@ date_default_timezone_set('Africa/Lagos');
 $verification_time = date("d M Y, h:i:s A");
 $verification_id = strtoupper(substr(hash('sha256', $id . date('Ymd') . $_SERVER['REMOTE_ADDR']), 0, 10));
 
-// Redirect if no ID
+// Show an error in place if no ID — there is no "personnel-list" page in
+// this app to redirect an anonymous scanner to.
 if (empty($id)) {
-    header("Location: personnel-list?error=invalid_id");
+    ?>
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Verification Error</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <style>
+            * { box-sizing: border-box; margin: 0; padding: 0; }
+            body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f6f9; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+            .error-container { max-width: 90%; width: 450px; text-align: center; padding: 25px; background: white; border-radius: 12px; box-shadow: 0 5px 30px rgba(0,0,0,0.1); }
+            .error-icon { font-size: 50px; color: #dc3545; margin-bottom: 15px; }
+            .error-container h2 { color: #dc3545; margin-bottom: 10px; font-size: 20px; }
+            .error-container p { color: #666; margin-bottom: 15px; font-size: 14px; }
+            .btn { display: inline-block; padding: 10px 20px; background: #003366; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px; }
+            .btn:hover { background: #004080; }
+        </style>
+    </head>
+    <body>
+        <div class="error-container">
+            <div class="error-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            <h2>Invalid Verification Link</h2>
+            <p>No service number was provided to verify.</p>
+            <a href="https://www.immigration.gov.ng" class="btn"><i class="fas fa-arrow-left"></i> Return</a>
+        </div>
+    </body>
+    </html>
+    <?php
     exit();
 }
 
@@ -147,7 +199,7 @@ if (!$retrieve) {
             <div class="error-icon"><i class="fas fa-exclamation-triangle"></i></div>
             <h2>System Error</h2>
             <p>A temporary system error occurred. Please try again later.</p>
-            <a href="personnel-list" class="btn"><i class="fas fa-arrow-left"></i> Return</a>
+            <a href="https://www.immigration.gov.ng" class="btn"><i class="fas fa-arrow-left"></i> Return</a>
             <div class="error-code">Ref: <?php echo htmlspecialchars($verification_id); ?></div>
         </div>
     </body>
@@ -184,7 +236,7 @@ if ($numb == 0) {
             <h2>Verification Failed</h2>
             <p>No valid record found.</p>
             <p style="font-size: 12px; color: #999; margin-top: 10px;">This ID card may be invalid or the personnel record does not exist.</p>
-            <a href="personnel-list" class="btn"><i class="fas fa-arrow-left"></i> Return</a>
+            <a href="https://www.immigration.gov.ng" class="btn"><i class="fas fa-arrow-left"></i> Return</a>
         </div>
     </body>
     </html>

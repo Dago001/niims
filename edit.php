@@ -25,7 +25,7 @@ $id = isset($_GET['id']) ? mysqli_real_escape_string($conn, $_GET['id']) : '';
 if (empty($id)) {
     $_SESSION['profile_update_error'] = true;
     $_SESSION['profile_update_message'] = "Invalid user ID.";
-    header("Location: edit-user");
+    header("Location: createuser?tab=manage");
     exit();
 }
 
@@ -39,7 +39,7 @@ $numb = mysqli_num_rows($retrieve);
 if ($numb == 0) {
     $_SESSION['profile_update_error'] = true;
     $_SESSION['profile_update_message'] = "User not found.";
-    header("Location: edit-user");
+    header("Location: createuser?tab=manage");
     exit();
 }
 
@@ -88,6 +88,32 @@ include 'top-navigation.php';
         .role-info-box.show { display: block; }
         .superadmin-warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px 15px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; color: #856404; }
         .superadmin-warning i { font-size: 18px; margin-right: 8px; }
+
+        .password-requirements {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 10px 14px;
+            margin-top: 8px;
+            font-size: 12px;
+        }
+        .pw-req {
+            color: #94a3b8;
+            padding: 2px 0;
+        }
+        .pw-req-icon:before {
+            content: "\25CB";
+            margin-right: 6px;
+            display: inline-block;
+            width: 12px;
+        }
+        .pw-req.valid {
+            color: #059669;
+            font-weight: 600;
+        }
+        .pw-req.valid .pw-req-icon:before {
+            content: "\2713";
+        }
     </style>
 </head>
 <body>
@@ -194,8 +220,15 @@ include 'top-navigation.php';
                             <div class="form-group row">
                                 <label for="password" class="col-sm-3 text-end control-label col-form-label">Password (Optional)</label>
                                 <div class="col-sm-9">
-                                    <input type="password" class="form-control" name="password" id="password" 
-                                           placeholder="Enter new password (leave blank to keep current)" />
+                                    <input type="password" class="form-control" name="password" id="password"
+                                           placeholder="Enter new password (leave blank to keep current)" autocomplete="new-password" />
+                                    <div class="password-requirements" id="passwordRequirements" style="display:none;">
+                                      <div class="pw-req" data-rule="length"><span class="pw-req-icon"></span> At least 8 characters</div>
+                                      <div class="pw-req" data-rule="upper"><span class="pw-req-icon"></span> One uppercase letter</div>
+                                      <div class="pw-req" data-rule="lower"><span class="pw-req-icon"></span> One lowercase letter</div>
+                                      <div class="pw-req" data-rule="number"><span class="pw-req-icon"></span> One number</div>
+                                      <div class="pw-req" data-rule="special"><span class="pw-req-icon"></span> One special character</div>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -224,7 +257,7 @@ include 'top-navigation.php';
                                     <button type="submit" name="updateProfile" class="btn btn-success" id="updateBtn">
                                         <i class="fa fa-save"></i> Update Profile
                                     </button>
-                                    <a href="edit-user" class="btn btn-secondary">
+                                    <a href="createuser?tab=manage" class="btn btn-secondary">
                                         <i class="fa fa-arrow-left"></i> Back to Users List
                                     </a>
                                 </div>
@@ -265,9 +298,49 @@ function showRoleInfo() {
     }
 }
 
+function checkPasswordRequirements(password) {
+    const rules = {
+        length: password.length >= 8,
+        upper: /[A-Z]/.test(password),
+        lower: /[a-z]/.test(password),
+        number: /[0-9]/.test(password),
+        special: /[^A-Za-z0-9]/.test(password)
+    };
+    Object.keys(rules).forEach(function(key) {
+        const el = document.querySelector('.pw-req[data-rule="' + key + '"]');
+        if (el) el.classList.toggle('valid', rules[key]);
+    });
+    return Object.keys(rules).every(function(key) { return rules[key]; });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     showRoleInfo();
-    
+
+    const passwordField = document.getElementById('password');
+    const passwordRequirementsBox = document.getElementById('passwordRequirements');
+    passwordField.addEventListener('input', function() {
+        if (this.value.length > 0) {
+            passwordRequirementsBox.style.display = 'block';
+            checkPasswordRequirements(this.value);
+        } else {
+            passwordRequirementsBox.style.display = 'none';
+        }
+    });
+
+    document.getElementById('updateForm').addEventListener('submit', function(e) {
+        const typedPassword = passwordField.value;
+        if (typedPassword.length > 0 && !checkPasswordRequirements(typedPassword)) {
+            e.preventDefault();
+            passwordRequirementsBox.style.display = 'block';
+            Swal.fire({
+                icon: 'warning',
+                title: 'Weak Password',
+                html: 'The password does not meet all requirements. Please check the checklist below the password field.',
+                confirmButtonText: 'OK'
+            });
+        }
+    });
+
     <?php if (isset($_SESSION['profile_update_error'])): ?>
         Swal.fire({
             icon: 'error',

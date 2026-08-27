@@ -7,6 +7,7 @@ if (!isset($_SESSION['username'])) {
 }
 
 require_once('db/db.php');
+require_once('functions/posting_helper.php');
 
 // Include print logging function
 include_once 'includes/log_print.php';
@@ -154,10 +155,10 @@ if ($count_result) {
 mysqli_stmt_close($count_stmt);
 
 // OPTIMIZED QUERY: Using prepared statements for security - NOW INCLUDING confirmed_details
-$sqluse = "SELECT DISTINCT emp.serviceNo, emp.surname, emp.firstName, emp.phone, 
+$sqluse = "SELECT DISTINCT emp.serviceNo, emp.surname, emp.firstName, emp.phone,
                   emp.middleName, emp.bloodType, emp.signature, emp.confirmed_details,
-                  emp2.currentRank, emp2.presentPosting
-           FROM tbl_emppersonal emp 
+                  emp2.currentRank, emp2.presentPosting, emp2.directorate, emp2.unit, emp2.posting_other
+           FROM tbl_emppersonal emp
            INNER JOIN tbl_employment emp2 ON emp.serviceNo = emp2.serviceNo";
            
 if (!empty($where_clause)) {
@@ -1350,7 +1351,12 @@ $total_filtered_records = $all_retrieve ? mysqli_num_rows($all_retrieve) : 0;
                                     $firstName = htmlspecialchars($ret['firstName']);
                                     $middleName = htmlspecialchars($ret['middleName']);
                                     $rank = htmlspecialchars($ret['currentRank']);
-                                    $posting = htmlspecialchars($ret['presentPosting']);
+                                    $posting = htmlspecialchars(formatPresentPosting(
+                                        $ret['presentPosting'],
+                                        $ret['directorate'] ?? '',
+                                        $ret['unit'] ?? '',
+                                        $ret['posting_other'] ?? ''
+                                    ));
                                     $bloodType = htmlspecialchars($ret['bloodType']);
                                     $confirmedDetails = htmlspecialchars($ret['confirmed_details']);
                                     

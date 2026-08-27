@@ -11,8 +11,8 @@ ini_set('upload_max_filesize', '64M');
 ini_set('post_max_size', '65M');
 ini_set('memory_limit', '256M');
 ini_set('max_execution_time', '300');
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+error_reporting(0);
+ini_set('display_errors', 0);
 
 $target_dir = "upload/";
 
@@ -28,8 +28,10 @@ if (!isset($_FILES["file-upload"]) || $_FILES["file-upload"]["error"] != UPLOAD_
     exit();
 }
 
-// Get service number from form (make sure your form has this field)
-$serviceNo = $_POST['serviceNo'] ?? '';
+// Get service number from form (make sure your form has this field) — strip
+// anything but alphanumerics so this can't be used to traverse out of the
+// upload directory via "../" or similar in the filename.
+$serviceNo = preg_replace('/[^a-zA-Z0-9_\-]/', '', $_POST['serviceNo'] ?? '');
 
 // Use service number as filename to ensure proper override
 $imageFileType = strtolower(pathinfo($_FILES["file-upload"]["name"], PATHINFO_EXTENSION));

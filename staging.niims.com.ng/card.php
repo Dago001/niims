@@ -85,7 +85,7 @@ while ($foundk = mysqli_fetch_array($retrieve)) {
     $bloodType = $foundk['bloodType'];
 }
 
-$staffData = 'niims.com.ng/employee.php?id='.$profile;
+$staffData = 'https://niims.com.ng/employee.php?id='.$profile;
 
 // ============ QR CODE GENERATION ============
 $matrix = QRcode::text($staffData);

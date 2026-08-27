@@ -868,13 +868,12 @@ if (!empty($search_condition)) {
                                             </td>
                                             <td>
                                                 <div class="actions-container">
-                                                    <!-- VIEW BUTTON - Passes view_only=1 so it won't count as printed -->
-                                                    <a href="card?id=<?php echo urlencode($rawServiceNo); ?>&view_only=1" 
-                                                       class="btn-view" 
-                                                       target="_blank"
+                                                    <!-- VIEW BUTTON - Opens in a popup window; view_only=1 so it won't count as printed -->
+                                                    <button class="btn-view" type="button"
+                                                       onclick="viewCardPopup('<?php echo addslashes($rawServiceNo); ?>')"
                                                        title="View ID Card for <?php echo addslashes($ret['firstName'] . ' ' . $ret['surname']); ?>">
                                                         <i class="fas fa-id-card"></i> View
-                                                    </a>
+                                                    </button>
                                                     <!-- PRINT BUTTON - This will count as printed -->
                                                     <button class="btn-print" type="button" 
                                                             onclick="printCardIframe('<?php echo addslashes($rawServiceNo); ?>')"
@@ -1141,6 +1140,29 @@ if (!empty($search_condition)) {
                 setTimeout(() => {
                     if (confirm('Popup was blocked. Would you like to open the card in this window instead?')) {
                         window.location.href = baseUrl + 'card.php?id=' + encodeURIComponent(serviceNo) + '&return=1';
+                    }
+                }, 1000);
+            }
+        }
+
+        // VIEW BUTTON - Opens the ID card in a popup window instead of a new tab/page
+        function viewCardPopup(serviceNo) {
+            const currentUrl = window.location.href;
+            const baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/') + 1);
+
+            const viewWindow = window.open(
+                baseUrl + 'card.php?id=' + encodeURIComponent(serviceNo) + '&view_only=1',
+                'cardView_' + serviceNo,
+                'width=900,height=700,scrollbars=yes,resizable=yes,toolbar=no,location=no,status=no,menubar=no'
+            );
+
+            if (viewWindow) {
+                viewWindow.focus();
+            } else {
+                showPrintError('Popup blocked! Please allow popups for this site.');
+                setTimeout(() => {
+                    if (confirm('Popup was blocked. Would you like to open the card in this window instead?')) {
+                        window.location.href = baseUrl + 'card.php?id=' + encodeURIComponent(serviceNo) + '&view_only=1';
                     }
                 }, 1000);
             }

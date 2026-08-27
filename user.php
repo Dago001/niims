@@ -1,6 +1,6 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+error_reporting(0);
+ini_set('display_errors', 0);
 
 session_start();
 
@@ -17,6 +17,7 @@ if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowed_roles)) {
 }
 
 require_once('db/db.php');
+require_once('functions/password_helper.php');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Check if required fields are set
@@ -45,14 +46,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $generated_password = '';
     if (!empty($_POST['password'])) {
         $raw_password = trim($_POST['password']);
-        if (strlen($raw_password) < 6) {
-            $_SESSION['error'] = "Password must be at least 6 characters long.";
+        $policyCheck = validatePasswordPolicy($raw_password);
+        if ($policyCheck !== true) {
+            $_SESSION['error'] = $policyCheck;
             $_SESSION['form_data'] = $_POST;
             header("Location: createuser");
             exit;
         }
     } else {
-        $raw_password = substr(str_shuffle('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 8);
+        $raw_password = generateCompliantPassword();
         $generated_password = $raw_password;
     }
     
@@ -161,6 +163,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Include is_active if column exists
         if (isset($columns['is_active'])) {
             $field_names[] = 'is_active';
+            $field_values[] = "1";
+        }
+
+        // Every new user must change their (generated or admin-set) password
+        // on first login before they can use the system.
+        if (isset($columns['must_change_password'])) {
+            $field_names[] = 'must_change_password';
             $field_values[] = "1";
         }
         

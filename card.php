@@ -1,6 +1,6 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+error_reporting(0);
+ini_set('display_errors', 0);
 session_start();
 
 // Check if user is logged in
@@ -85,7 +85,7 @@ while ($foundk = mysqli_fetch_array($retrieve)) {
     $bloodType = $foundk['bloodType'];
 }
 
-$staffData = 'niims.com.ng/employee.php?id='.$profile;
+$staffData = 'https://niims.com.ng/employee.php?id='.$profile;
 
 // ============ QR CODE GENERATION ============
 $matrix = QRcode::text($staffData);
@@ -822,8 +822,8 @@ if (!$photoFound) {
                         (<?php echo htmlspecialchars($print['printed_by_role'] ?? 'Unknown'); ?>)
                     </div>
                     <div class="print-history-date">
-                        <i class="far fa-calendar-alt"></i> <?php echo $print['formatted_date'] ?? 'Date not available'; ?>
-                        <span class="print-history-method"><?php echo ucfirst($print['print_method'] ?? 'single'); ?></span>
+                        <i class="far fa-calendar-alt"></i> <?php echo htmlspecialchars($print['formatted_date'] ?? 'Date not available'); ?>
+                        <span class="print-history-method"><?php echo htmlspecialchars(ucfirst($print['print_method'] ?? 'single')); ?></span>
                     </div>
                 </div>
             </div>

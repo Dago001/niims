@@ -2355,6 +2355,18 @@ a.btn-danger {
 .open .dropdown-toggle.btn-success {
     background: #169F85
 }
+.btn-primary {
+    background: #0e7a2e;
+    border: 1px solid #0e7a2e
+}
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active,
+.btn-primary.active,
+.open .dropdown-toggle.btn-primary {
+    background: #0b5f24;
+    border-color: #0b5f24
+}
 .btn-dark {
     color: #E9EDEF;
     background-color: #4B5F71;

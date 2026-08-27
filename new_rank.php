@@ -16,14 +16,17 @@ if ($_SESSION['role'] == "Admin") {
 include 'menu-footer-buttons.php';
 include 'top-navigation.php';
 
-$id = $_GET['id'];
+$id = isset($_GET['id']) ? $_GET['id'] : '';
 
 $sqluse = "SELECT emp.serviceNo, emp.surname, emp.firstName, emp.signature, emp.middleName, emp.bloodType, emp2.currentRank
-          FROM tbl_emppersonal emp 
+          FROM tbl_emppersonal emp
           INNER JOIN tbl_employment emp2 ON emp.serviceNo = emp2.serviceNo
-          WHERE emp.serviceNo = $id";
-$retrieve = mysqli_query($conn, $sqluse);
-$numb = mysqli_num_rows($retrieve); 
+          WHERE emp.serviceNo = ?";
+$stmt = mysqli_prepare($conn, $sqluse);
+mysqli_stmt_bind_param($stmt, "s", $id);
+mysqli_stmt_execute($stmt);
+$retrieve = mysqli_stmt_get_result($stmt);
+$numb = mysqli_num_rows($retrieve);
 while ($foundk = mysqli_fetch_array($retrieve)) {
     $serviceNo = $foundk['serviceNo'];
     $surname = $foundk['surname'];

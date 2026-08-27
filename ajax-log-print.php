@@ -9,8 +9,11 @@ require_once 'db/db.php';
 require_once 'includes/log_print.php';
 
 $serviceNo = $_POST['serviceNo'] ?? '';
-$print_method = $_POST['print_method'] ?? 'single';
-$batch_id = $_POST['batch_id'] ?? null;
+// Whitelisted rather than stored as-is — this value ends up rendered
+// unescaped in a few report pages, so anything other than these two
+// literals would be a stored-XSS vector.
+$print_method = (($_POST['print_method'] ?? '') === 'bulk') ? 'bulk' : 'single';
+$batch_id = isset($_POST['batch_id']) ? preg_replace('/[^A-Za-z0-9_\-]/', '', $_POST['batch_id']) : null;
 
 $response = ['success' => false];
 

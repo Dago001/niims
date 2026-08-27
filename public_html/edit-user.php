@@ -533,7 +533,7 @@ $retrieve = mysqli_query($conn, $sqluse);
                         extraWarning,
                   icon: 'warning',
                   showCancelButton: true,
-                  confirmButtonColor: '#3085d6',
+                  confirmButtonColor: '#0e7a2e',
                   cancelButtonColor: '#d33',
                   confirmButtonText: '<i class="fa fa-check"></i> Yes, reset password',
                   cancelButtonText: '<i class="fa fa-times"></i> Cancel',
@@ -607,7 +607,7 @@ $retrieve = mysqli_query($conn, $sqluse);
                       title: 'Profile Updated!',
                       html: '<?php echo addslashes($_SESSION['profile_update_message']); ?><br><br>' +
                             '<strong>User ID: <?php echo isset($_SESSION['profile_updated_user_id']) ? $_SESSION['profile_updated_user_id'] : ''; ?></strong>',
-                      confirmButtonColor: '#3085d6',
+                      confirmButtonColor: '#0e7a2e',
                       confirmButtonText: 'OK',
                       timer: 4000,
                       timerProgressBar: true,

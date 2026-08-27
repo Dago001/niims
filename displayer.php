@@ -2,8 +2,8 @@
 session_start();
 include("db/db.php");
 
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+error_reporting(0);
+ini_set('display_errors', 0);
 
 // Check if user is logged in
 if (!isset($_SESSION['username'])) {
@@ -11,7 +11,7 @@ if (!isset($_SESSION['username'])) {
     exit;
 }
 
-$id = $_GET['id'];
+$id = isset($_GET['id']) ? $_GET['id'] : '';
 
 $dateofRegistration = date("Y/m/d");
 
@@ -25,9 +25,12 @@ INNER JOIN tbl_employment emp2 ON emp.serviceNo = emp2.serviceNo
 INNER JOIN tbl_nok nk ON emp2.serviceNo = nk.serviceNo
 INNER JOIN tbl_qualification qf ON emp.serviceNo = qf.serviceNo
 INNER JOIN tbl_finance fn ON emp.serviceNo = fn.serviceNo
-WHERE emp.serviceNo=$id";
-$retrieve = mysqli_query($conn, $sqluse);
-$numb = mysqli_num_rows($retrieve); 
+WHERE emp.serviceNo = ?";
+$stmt = mysqli_prepare($conn, $sqluse);
+mysqli_stmt_bind_param($stmt, "s", $id);
+mysqli_stmt_execute($stmt);
+$retrieve = mysqli_stmt_get_result($stmt);
+$numb = mysqli_num_rows($retrieve);
 
 if ($numb > 0) {
     $foundk = mysqli_fetch_array($retrieve);
