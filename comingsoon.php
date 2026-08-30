@@ -577,6 +577,11 @@ include 'top-navigation.php';
             document.getElementById('loadingSpinner').style.display = 'none';
         }
         
+        // Reset loading spinner on back/forward browser navigation
+        window.addEventListener('pageshow', function(event) {
+            hideLoading();
+        });
+        
         // Set launch date (30 days from now)
         const launchDate = new Date();
         launchDate.setDate(launchDate.getDate() + 30);

@@ -1989,6 +1989,11 @@ function printSelected() {
             document.getElementById('loadingSpinner').style.display = 'none';
         }
         
+        // Reset loading spinner on back/forward browser navigation
+        window.addEventListener('pageshow', function(event) {
+            hideLoading();
+        });
+        
         // Keyboard shortcuts
         document.addEventListener('keydown', function(e) {
             // Ctrl+A to select all
