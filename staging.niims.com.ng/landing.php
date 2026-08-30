@@ -1,8 +1,18 @@
 <?php 
 session_start();
 
+if (!isset($_SESSION['username'])) {
+    header("Location: index");
+    die();
+}
 
-  require_once ('db/db.php');
+require_once ('db/db.php');
+
+// Privileged roles should always see the full dashboard, not the basic landing page
+if (in_array($_SESSION['role'], ['SuperAdmin', 'Admin', 'Supervisor', 'Report'])) {
+    header("Location: mainpage");
+    exit();
+}
 
   if ($_SESSION['role'] == "DataEntry") {
     include 'sidebar-dataentry.php';
