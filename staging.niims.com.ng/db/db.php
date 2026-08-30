@@ -15,14 +15,36 @@ define('DB_USERNAME', 'root');
 define('DB_PASSWORD', '');
 define('DB_DATABASE', 'niimscom_idcard');
 
-$conn = mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
+// Turn off automatic mysqli exception throwing to prevent HTTP 500 errors on connection failures
+mysqli_report(MYSQLI_REPORT_OFF);
+
+try {
+    $conn = @mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
+} catch (Throwable $e) {
+    $conn = false;
+    error_log("Database connection exception: " . $e->getMessage());
+}
 
 if (!$conn) {
-    // Log the real error server-side, never expose it to the browser
+    // Log the real error server-side
     error_log("Database connection failed: " . mysqli_connect_error());
     http_response_code(503);
-    die("Service temporarily unavailable. Please try again later.");
+    die("
+    <div style='font-family: Arial, sans-serif; background-color: #f8d7da; color: #721c24; padding: 30px; margin: 50px auto; max-width: 600px; border: 1px solid #f5c6cb; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);'>
+        <h2 style='margin-top:0;'>⚠️ Database Connection Required</h2>
+        <p>NIIMS could not connect to the MySQL database on the live server.</p>
+        <hr style='border-top: 1px solid #f5c6cb;'>
+        <p><strong>To resolve this issue:</strong></p>
+        <ol style='text-align: left; line-height: 1.6;'>
+            <li>Open <code>db/db.php</code> on your live server.</li>
+            <li>Set <code>DB_SERVER</code> (usually <code>localhost</code>).</li>
+            <li>Set <code>DB_USERNAME</code> (your live cPanel DB User).</li>
+            <li>Set <code>DB_PASSWORD</code> (your live cPanel DB Password).</li>
+            <li>Set <code>DB_DATABASE</code> (your live cPanel Database Name).</li>
+        </ol>
+    </div>");
 }
+
 
 // Set character set
 if (!mysqli_set_charset($conn, "utf8mb4")) {
