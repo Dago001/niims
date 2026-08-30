@@ -398,7 +398,35 @@ $total_filtered_records = $all_retrieve ? mysqli_num_rows($all_retrieve) : 0;
             border-radius: 6px;
         }
         
-        /* Native Gentelella Styling Tweaks */
+        /* Native Gentelella Styling Tweaks & Uniform Font Scaling */
+        .x_panel .x_title h2 {
+            font-size: 16px !important;
+            font-weight: 600 !important;
+            margin: 0 !important;
+        }
+        .x_panel .x_title h2 small {
+            font-size: 12px !important;
+            font-weight: normal !important;
+            color: #73879C !important;
+        }
+        .x_panel label {
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            color: #5A738E !important;
+            margin-bottom: 5px !important;
+        }
+        .x_panel .form-control {
+            font-size: 12px !important;
+            height: 32px !important;
+            padding: 4px 8px !important;
+            border-radius: 3px !important;
+            border: 1px solid #ccc !important;
+        }
+        .x_panel .btn {
+            font-size: 12px !important;
+            padding: 5px 12px !important;
+            border-radius: 3px !important;
+        }
         .filter-badge {
             display: inline-block;
             margin-right: 5px;
