@@ -21,6 +21,9 @@ if ($_SESSION['role'] == "Report") {
 if ($_SESSION['role'] == "Admin") {
     include 'sidebar-admin.php';
 }
+if ($_SESSION['role'] == "SuperAdmin") {
+    include 'sidebar-superadmin.php';
+}
 
 include 'menu-footer-buttons.php';
 include 'top-navigation.php';

@@ -19,7 +19,7 @@
   
   if ($_SESSION['role'] == "SuperAdmin")
   {
-    include 'sidebar.php';
+    include 'sidebar-superadmin.php';
   }
    if ($_SESSION['role'] == "DataEntry")
   {

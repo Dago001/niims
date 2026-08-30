@@ -25,6 +25,10 @@ require_once ('db/db.php');
       {
         include 'sidebar-admin.php';
       }
+    if ($_SESSION['role'] == "SuperAdmin")
+      {
+        include 'sidebar-superadmin.php';
+      }
        if ($_SESSION['role'] == "Posting")
       {
         include 'sidebar-posting.php';

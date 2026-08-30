@@ -11,6 +11,8 @@ require_once('db/db.php');
 // Include appropriate sidebar based on role
 if ($_SESSION['role'] == "Admin") {
     include 'sidebar-admin.php';
+} elseif ($_SESSION['role'] == "SuperAdmin") {
+    include 'sidebar-superadmin.php';
 } elseif ($_SESSION['role'] == "Supervisor") {
     include 'sidebar-supervisor.php';
 } elseif ($_SESSION['role'] == "CGI") {

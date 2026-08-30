@@ -12,6 +12,9 @@ require_once('functions/posting_helper.php');
 if ($_SESSION['role'] == "Admin") {
     include 'sidebar-admin.php';
 }
+if ($_SESSION['role'] == "SuperAdmin") {
+    include 'sidebar-superadmin.php';
+}
 
 if ($_SESSION['role'] == "CGI") {
     include 'sidebar-cgi.php';

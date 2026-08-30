@@ -17,7 +17,7 @@ if ($_SESSION['role'] == "DataEntry") {
     include 'sidebar-dataentry.php';
 }
 if ($_SESSION['role'] == "SuperAdmin") {
-    include 'sidebar.php';
+    include 'sidebar-superadmin.php';
 }
 if ($_SESSION['role'] == "Biometric") {
     include 'sidebar-biometric.php';

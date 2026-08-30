@@ -9,11 +9,13 @@ if (!isset($_SESSION['username'])) {
   if ($_SESSION['role'] == "Admin") {
     include 'sidebar-admin.php';
   }
- if ($_SESSION['role'] == "Report") {
+  elseif ($_SESSION['role'] == "SuperAdmin") {
+    include 'sidebar-superadmin.php';
+  }
+  elseif ($_SESSION['role'] == "Report") {
     include 'sidebar-view.php';
   }
   else {
-    
     include 'sidebar.php';
   }
   

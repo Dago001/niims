@@ -20,6 +20,9 @@ if ($_SESSION['role'] == "Report") {
 if ($_SESSION['role'] == "Admin") {
     include 'sidebar-admin.php';
 }
+if ($_SESSION['role'] == "SuperAdmin") {
+    include 'sidebar-superadmin.php';
+}
 
 include 'menu-footer-buttons.php';
 include 'top-navigation.php';
@@ -105,6 +108,37 @@ include 'top-navigation.php';
         .is-invalid:focus {
             box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
         }
+        /* Review step styling */
+        .review-section-title {
+            color: #1c6ea4;
+            font-weight: 600;
+            margin-top: 20px;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        .review-section-title:first-child {
+            margin-top: 0;
+        }
+        .review-table {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .review-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            width: 35%;
+        }
+        .review-table th,
+        .review-table td {
+            padding: 8px 12px;
+            border: 1px solid #e9ecef;
+            vertical-align: top;
+        }
+        .review-value-missing {
+            color: #dc3545;
+            font-style: italic;
+        }
         </style>
         <div class="clearfix"></div>
 
@@ -169,6 +203,14 @@ include 'top-navigation.php';
                             <li>
                                 <a href="#step-5">
                                     <span class="step_no">5</span>
+                                    <span class="step_descr">
+                                        <small>Review</small>
+                                    </span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#step-6">
+                                    <span class="step_no">6</span>
                                     <span class="step_descr">
                                         <small>Finish</small>
                                     </span>
@@ -570,7 +612,66 @@ include 'top-navigation.php';
                                                                 
                                             </select>
                                         </div>
-                                    </div>                              
+                                    </div>
+
+                                    <!-- Shown only when Present Posting = Service Headquarters (SHQ) -->
+                                    <div class="form-group" id="postingTypeGroup" style="display:none;">
+                                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="posting_type_choice">Posting Type</label>
+                                        <div class="col-md-6 col-sm-6 col-xs-12">
+                                            <select name="posting_type_choice" id="posting_type_choice" class="form-control col-md-7 col-xs-12 shadow-none">
+                                                <option value="">-- Select Directorate or Unit --</option>
+                                                <option value="directorate">Directorate</option>
+                                                <option value="unit">Unit</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group" id="directorateGroup" style="display:none;">
+                                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="directorate">Directorate</label>
+                                        <div class="col-md-6 col-sm-6 col-xs-12">
+                                            <select name="directorate" id="directorate" class="form-control col-md-7 col-xs-12 shadow-none">
+                                                <option value="">--Select Directorate--</option>
+                                                <option value="Human Resources Management Directorate">Human Resources Management Directorate</option>
+                                                <option value="Finance and Accounts Directorate">Finance and Accounts Directorate</option>
+                                                <option value="Planning, Research and Statistics Directorate">Planning, Research and Statistics Directorate</option>
+                                                <option value="Passport and Other Travel Documents">Passport and Other Travel Documents</option>
+                                                <option value="Investigation & Compliance Directorate">Investigation & Compliance Directorate</option>
+                                                <option value="Border Management Directorate">Border Management Directorate</option>
+                                                <option value="Migration Directorate">Migration Directorate</option>
+                                                <option value="Visa and Residency Directorate">Visa and Residency Directorate</option>
+                                                <option value="ICT and Cyber Security Directorate">ICT and Cyber Security Directorate</option>
+                                                <option value="Works and Logistics Directorate">Works and Logistics Directorate</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group" id="unitGroup" style="display:none;">
+                                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="unit">Unit</label>
+                                        <div class="col-md-6 col-sm-6 col-xs-12">
+                                            <select name="unit" id="unit" class="form-control col-md-7 col-xs-12 shadow-none">
+                                                <option value="">--Select Unit--</option>
+                                                <option value="Legal">Legal</option>
+                                                <option value="Internal Audits">Internal Audits</option>
+                                                <option value="Procurement">Procurement</option>
+                                                <option value="SERVICOM">SERVICOM</option>
+                                                <option value="Provost">Provost</option>
+                                                <option value="Press and Public Relations">Press and Public Relations</option>
+                                                <option value="Gender Affairs">Gender Affairs</option>
+                                                <option value="Anti-Corruption and Transparency">Anti-Corruption and Transparency</option>
+                                                <option value="Innovation/Electronic Passport Management System (EPMS)">Innovation/Electronic Passport Management System (EPMS)</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Shown only when Directorate or Unit above is set to "Other" -->
+                                    <div class="form-group" id="postingOtherGroup" style="display:none;">
+                                        <label class="control-label col-md-3 col-sm-3 col-xs-12" for="posting_other">Please Specify</label>
+                                        <div class="col-md-6 col-sm-6 col-xs-12">
+                                            <input type="text" name="posting_other" id="posting_other" class="form-control col-md-7 col-xs-12" placeholder="Please specify" maxlength="100" oninput="validateAlphabetsOnly(this)">
+                                        </div>
+                                    </div>
                                 </div>
                             </fieldset>
                             <fieldset>
@@ -709,7 +810,14 @@ include 'top-navigation.php';
                                 </div>
                             </fieldset>
                             <fieldset>
-                                  <div id="step-5">
+                                <div id="step-5">
+                                    <h4 class="StepTitle">Review Your Information</h4>
+                                    <p>Please check the details below carefully. If anything is incorrect, click <strong>Previous</strong> to go back and fix it before submitting.</p>
+                                    <div id="reviewContent"></div>
+                                </div>
+                            </fieldset>
+                            <fieldset>
+                                  <div id="step-6">
                                             <div class="border-top">
                                                 <div class="card-body">
                                                     <button type="button" id="submitBtn" name="regEmployee" class="btn btn-primary">
@@ -719,12 +827,12 @@ include 'top-navigation.php';
                                                         Reset Form
                                                     </button>
                                                 </div>
-                                                <label class="control-label col-md-3 col-sm-3 col-xs-12" for="logged_in">Data Entry by: 
+                                                <label class="control-label col-md-3 col-sm-3 col-xs-12" for="logged_in">Data Entry by:
                                               </label>
                                               <div class="col-md-6 col-sm-6 col-xs-12">
                                                 <input type="text" name="logged_in" class="form-control col-md-7 col-xs-12" value="<?php echo $_SESSION['user_id']; ?>" readonly>
                                               </div>
-                                                
+
                                             </div>
                             </fieldset>
                         </form>
@@ -763,6 +871,82 @@ include 'top-navigation.php';
       // Remove non-numeric characters
       input.value = input.value.replace(/[^0-9]/g, '');
     }
+    function validateAlphabetsOnly(input) {
+      // Allow letters and spaces only — no numbers or special characters
+      input.value = input.value.replace(/[^a-zA-Z\s]/g, '');
+    }
+
+    // Present Posting = Service Headquarters (SHQ) reveals a Directorate/Unit
+    // choice; picking "Other" in either reveals a free-text field.
+    function updateShqFields() {
+      var presentPostingEl = document.querySelector('select[name="presentPosting"]');
+      var postingTypeGroup = document.getElementById('postingTypeGroup');
+      var postingTypeSelect = document.getElementById('posting_type_choice');
+      var directorateGroup = document.getElementById('directorateGroup');
+      var directorateSelect = document.getElementById('directorate');
+      var unitGroup = document.getElementById('unitGroup');
+      var unitSelect = document.getElementById('unit');
+      var otherGroup = document.getElementById('postingOtherGroup');
+      var otherInput = document.getElementById('posting_other');
+
+      if (!presentPostingEl || !postingTypeGroup) return;
+
+      var isSHQ = presentPostingEl.value === 'Service Headquarters';
+
+      if (isSHQ) {
+        postingTypeGroup.style.display = '';
+        postingTypeSelect.setAttribute('required', 'required');
+      } else {
+        postingTypeGroup.style.display = 'none';
+        postingTypeSelect.removeAttribute('required');
+        postingTypeSelect.value = '';
+      }
+
+      var choice = isSHQ ? postingTypeSelect.value : '';
+
+      if (choice === 'directorate') {
+        directorateGroup.style.display = '';
+        directorateSelect.setAttribute('required', 'required');
+      } else {
+        directorateGroup.style.display = 'none';
+        directorateSelect.removeAttribute('required');
+        directorateSelect.value = '';
+      }
+
+      if (choice === 'unit') {
+        unitGroup.style.display = '';
+        unitSelect.setAttribute('required', 'required');
+      } else {
+        unitGroup.style.display = 'none';
+        unitSelect.removeAttribute('required');
+        unitSelect.value = '';
+      }
+
+      var showOther = (choice === 'directorate' && directorateSelect.value === 'Other') ||
+                      (choice === 'unit' && unitSelect.value === 'Other');
+
+      if (showOther) {
+        otherGroup.style.display = '';
+        otherInput.setAttribute('required', 'required');
+      } else {
+        otherGroup.style.display = 'none';
+        otherInput.removeAttribute('required');
+        otherInput.value = '';
+      }
+    }
+
+    (function() {
+      var presentPostingEl = document.querySelector('select[name="presentPosting"]');
+      var postingTypeEl = document.getElementById('posting_type_choice');
+      var directorateEl = document.getElementById('directorate');
+      var unitEl = document.getElementById('unit');
+      if (presentPostingEl) presentPostingEl.addEventListener('change', updateShqFields);
+      if (postingTypeEl) postingTypeEl.addEventListener('change', updateShqFields);
+      if (directorateEl) directorateEl.addEventListener('change', updateShqFields);
+      if (unitEl) unitEl.addEventListener('change', updateShqFields);
+      updateShqFields();
+    })();
+
     function validateAlphaNumeric(input) {
       // Remove non-alphanumeric characters
       input.value = input.value.replace(/[^a-zA-Z0-9]/g, '');
@@ -827,6 +1011,108 @@ include 'top-navigation.php';
   function validatePhoneNumber(input) {
       validateNumber(input);
   }
+
+    // ---- Review step (step 5) ----
+    function escapeHtml(str) {
+        var div = document.createElement('div');
+        div.textContent = str == null ? '' : str;
+        return div.innerHTML;
+    }
+
+    // Returns what the user actually sees for a field: the selected
+    // option's label for <select>s, the raw value for everything else.
+    function getFieldDisplayValue(name) {
+        var el = document.querySelector('#enrolmentForm [name="' + name + '"]');
+        if (!el) return '';
+        if (el.tagName === 'SELECT') {
+            // An empty value means the placeholder option is still selected —
+            // treat that as "nothing chosen" rather than showing the
+            // placeholder's own wording (e.g. "--Select Unit--") as if it
+            // were a real answer.
+            if (!el.value) return '';
+            return (el.selectedIndex >= 0 && el.options[el.selectedIndex]) ? el.options[el.selectedIndex].text.trim() : '';
+        }
+        return (el.value || '').trim();
+    }
+
+    var reviewSections = [
+        {
+            title: 'Personal Information',
+            fields: [
+                ['Service No', 'serviceNo'],
+                ['Surname', 'lname'],
+                ['First Name', 'fname'],
+                ['Middle Name', 'mname'],
+                ['Date of Birth', 'dob'],
+                ['Marital Status', 'marital_status'],
+                ['Maiden Name', 'maiden_name'],
+                ['Gender', 'gender'],
+                ['State of Origin', 'state_of_origin'],
+                ['LGA', 'lga'],
+                ['Town', 'town'],
+                ['Email Address', 'email'],
+                ['Phone No', 'phone'],
+                ['Blood Group', 'bloodType'],
+                ['Genotype', 'genotype']
+            ]
+        },
+        {
+            title: 'Next of Kin',
+            fields: [
+                ['Next of Kin Name', 'nok'],
+                ['Relationship', 'nok_relationship'],
+                ['NOK Phone No', 'nok_phone']
+            ]
+        },
+        {
+            title: 'Educational Qualification',
+            fields: [
+                ['Highest Qualification', 'qualification'],
+                ['Name of Institution', 'institution'],
+                ['Certificate Number', 'certificate_number'],
+                ['Date Obtained', 'date_obtained']
+            ]
+        },
+        {
+            title: 'Employment Information',
+            fields: [
+                ['Date of First Appointment', 'dofa'],
+                ['Date of Present Appointment', 'dopa'],
+                ['Current Rank', 'currentRank'],
+                ['Present Posting', 'presentPosting'],
+                ['Directorate', 'directorate'],
+                ['Unit', 'unit'],
+                ['Other (Please Specify)', 'posting_other']
+            ]
+        },
+        {
+            title: 'Banking / Pension Details',
+            fields: [
+                ['IPPIS No', 'ippis'],
+                ['Bank Name', 'bank'],
+                ['Account No', 'account_number'],
+                ['PFA', 'pfa'],
+                ['RSA No', 'rsa'],
+                ['NHF No', 'nhf']
+            ]
+        }
+    ];
+
+    function populateReviewStep() {
+        var html = '';
+        reviewSections.forEach(function(section) {
+            html += '<h5 class="review-section-title">' + escapeHtml(section.title) + '</h5>';
+            html += '<table class="table table-bordered review-table"><tbody>';
+            section.fields.forEach(function(field) {
+                var label = field[0], name = field[1];
+                var value = getFieldDisplayValue(name);
+                var displayValue = value ? escapeHtml(value) : '<span class="review-value-missing">Not provided</span>';
+                html += '<tr><th>' + escapeHtml(label) + '</th><td>' + displayValue + '</td></tr>';
+            });
+            html += '</tbody></table>';
+        });
+        document.getElementById('reviewContent').innerHTML = html;
+    }
 
         // Attach event listeners to input fields
         document.querySelectorAll('input[name="serviceNo"], input[name="phone"], input[name="nok_phone"]').forEach(input => {
@@ -1029,8 +1315,18 @@ include 'top-navigation.php';
                 }
             });
             
-            // Smart Wizard initialization
-            $('#wizard').smartWizard({
+            // Smart Wizard initialization.
+            //
+            // NOTE: build/js/custom.min.js already runs $('#wizard').smartWizard()
+            // with no options on page load (its init_SmartWizard()). This plugin
+            // version's $.fn.smartWizard() silently ignores a second call's options
+            // once an instance already exists for the element (it merges a new
+            // options object locally but never applies it to the existing
+            // instance) — so passing onLeaveStep/onShowStep here directly would be
+            // silently discarded. Instead, patch the callbacks onto whatever
+            // instance already exists, falling back to a normal init only if none
+            // does yet.
+            var wizardCallbacks = {
                 onLeaveStep: function(obj, context) {
                     if (isDuplicateServiceNo) {
                         Swal.fire({
@@ -1081,13 +1377,27 @@ include 'top-navigation.php';
                     const currentStep = context.toStep;
                     const stepElement = $('#step-' + currentStep);
                     stepElement.find('.is-invalid').removeClass('is-invalid');
-                    
+
+                    // Populate the Review step with what's currently in the form.
+                    // parseInt guards against the wizard passing step numbers as
+                    // strings (e.g. "5"), which a strict === would silently miss.
+                    if (parseInt(currentStep, 10) === 5) {
+                        populateReviewStep();
+                    }
+
                     // Fix stepContainer height
                     setTimeout(function() {
                         $('.stepContainer').css('height', '50px');
                     }, 10);
                 }
-            });
+            };
+
+            var existingWizard = $('#wizard').data('smartWizard');
+            if (existingWizard) {
+                $.extend(existingWizard.options, wizardCallbacks);
+            } else {
+                $('#wizard').smartWizard(wizardCallbacks);
+            }
             
             // Set initial height
             setTimeout(function() {
