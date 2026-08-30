@@ -31,6 +31,35 @@ $result = mysqli_query($conn, $query);
 ?>
 
 <style>
+.dataTables_filter {
+    text-align: right;
+    margin-bottom: 15px;
+}
+.dataTables_filter label {
+    font-weight: 500;
+    margin-bottom: 0;
+    width: 100%;
+}
+.dataTables_filter input {
+    width: 250px !important;
+    max-width: 100%;
+    display: inline-block;
+    padding: 6px 12px;
+    font-size: 13px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+    transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+}
+.dataTables_filter input:focus {
+    border-color: #1abb9c;
+    outline: 0;
+    box-shadow: inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(26,187,156,.6);
+}
+.dataTables_paginate {
+    text-align: right;
+    margin-top: 10px;
+}
 @media (max-width: 767px) {
     .dt-buttons {
         margin-bottom: 15px !important;
@@ -39,6 +68,16 @@ $result = mysqli_query($conn, $query);
     }
     .dt-buttons .btn {
         margin-bottom: 5px !important;
+    }
+    .dataTables_filter {
+        text-align: center !important;
+        margin-top: 10px;
+    }
+    .dataTables_filter input {
+        width: 100% !important;
+    }
+    .dataTables_paginate {
+        text-align: center !important;
     }
 }
 </style>
@@ -141,9 +180,22 @@ $result = mysqli_query($conn, $query);
 <script>
 $(document).ready(function() {
     $('#datatable-audit').DataTable({
-        dom: 'Bfrtip',
-        pageLength: 25,
+        dom: '<"row"<"col-md-6 col-sm-6 col-xs-12"B><"col-md-6 col-sm-6 col-xs-12"f>>rt<"row"<"col-md-6 col-sm-6 col-xs-12"i><"col-md-6 col-sm-6 col-xs-12"p>>',
+        pageLength: 50,
+        lengthMenu: [[10, 25, 50, 100, 250, -1], [10, 25, 50, 100, 250, "All"]],
         order: [[0, 'asc']],
+        language: {
+            search: "_INPUT_",
+            searchPlaceholder: "Search audit logs...",
+            lengthMenu: "Show _MENU_ entries per page",
+            info: "Showing _START_ to _END_ of _TOTAL_ audit entries",
+            paginate: {
+                first: "First",
+                last: "Last",
+                next: "Next",
+                previous: "Previous"
+            }
+        },
         buttons: [
             {
                 extend: 'copy',
