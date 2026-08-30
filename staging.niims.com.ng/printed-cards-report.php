@@ -688,7 +688,7 @@ $ranks_result = mysqli_query($conn, $ranks_sql);
         <div class="">
             <div class="page-title">
                 <div class="title_left">
-                    <h3 style="font-size: 20px;"><i class="fas fa-chart-pie"></i> Printed Cards Analytics Report</h3>
+                    <h3>Printed Cards Analytics Report</h3>
                 </div>
                 
             </div>
@@ -767,60 +767,37 @@ $ranks_result = mysqli_query($conn, $ranks_sql);
                 </form>
             </div>
             
-            <!-- Statistics Cards - EXACTLY like printed-cards.php -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon total">
-                        <i class="fas fa-print"></i>
-                    </div>
-                    <div class="stat-value"><?php echo number_format($overall['total_prints']); ?></div>
-                    <div class="stat-label">Total Cards Printed</div>
-                    <div class="stat-sub">Avg <?php echo $overall['avg_daily_prints']; ?>/day</div>
+            <!-- Statistics Tiles (Standard NIIMS Theme Styling) -->
+            <div class="row tile_count" style="margin-bottom: 20px; display: flex; flex-wrap: wrap;">
+                <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count" style="flex: 1; min-width: 140px; margin-bottom: 10px;">
+                    <span class="count_top"><i class="fa fa-print"></i> Total Printed</span>
+                    <div class="count blue" style="font-size: 26px; font-weight: bold;"><?php echo number_format($overall['total_prints']); ?></div>
+                    <span class="count_bottom">Avg <?php echo $overall['avg_daily_prints']; ?>/day</span>
                 </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon today">
-                        <i class="fas fa-calendar-day"></i>
-                    </div>
-                    <div class="stat-value"><?php echo number_format($today['today_total']); ?></div>
-                    <div class="stat-label">Today's Prints</div>
-                    <div class="stat-sub"><?php echo date('d M Y'); ?> | <?php echo number_format($today['today_unique']); ?> unique</div>
+                <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count" style="flex: 1; min-width: 140px; margin-bottom: 10px;">
+                    <span class="count_top"><i class="fa fa-calendar"></i> Today's Prints</span>
+                    <div class="count green" style="font-size: 26px; font-weight: bold;"><?php echo number_format($today['today_total']); ?></div>
+                    <span class="count_bottom"><?php echo date('d M Y'); ?> | <?php echo number_format($today['today_unique']); ?> unique</span>
                 </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon week">
-                        <i class="fas fa-calendar-week"></i>
-                    </div>
-                    <div class="stat-value"><?php echo number_format($week['week_total']); ?></div>
-                    <div class="stat-label">This Week</div>
-                    <div class="stat-sub"><?php echo number_format($week['week_unique']); ?> unique | <?php echo $week['week_active_days']; ?> active days</div>
+                <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count" style="flex: 1; min-width: 140px; margin-bottom: 10px;">
+                    <span class="count_top"><i class="fa fa-calendar-o"></i> This Week</span>
+                    <div class="count yellow" style="font-size: 26px; font-weight: bold;"><?php echo number_format($week['week_total']); ?></div>
+                    <span class="count_bottom"><?php echo number_format($week['week_unique']); ?> unique | <?php echo $week['week_active_days']; ?> days</span>
                 </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon month">
-                        <i class="fas fa-calendar-alt"></i>
-                    </div>
-                    <div class="stat-value"><?php echo number_format($month['month_total']); ?></div>
-                    <div class="stat-label">This Month</div>
-                    <div class="stat-sub"><?php echo number_format($month['month_unique']); ?> unique personnel</div>
+                <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count" style="flex: 1; min-width: 140px; margin-bottom: 10px;">
+                    <span class="count_top"><i class="fa fa-calendar-check-o"></i> This Month</span>
+                    <div class="count blue" style="font-size: 26px; font-weight: bold;"><?php echo number_format($month['month_total']); ?></div>
+                    <span class="count_bottom"><?php echo number_format($month['month_unique']); ?> unique personnel</span>
                 </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon unique">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div class="stat-value"><?php echo number_format($overall['unique_personnel']); ?></div>
-                    <div class="stat-label">Unique Personnel</div>
-                    <div class="stat-sub"><?php echo $overall['unique_ratio']; ?>% of total prints</div>
+                <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count" style="flex: 1; min-width: 140px; margin-bottom: 10px;">
+                    <span class="count_top"><i class="fa fa-users"></i> Unique Personnel</span>
+                    <div class="count" style="font-size: 26px; font-weight: bold; color: #9b59b6;"><?php echo number_format($overall['unique_personnel']); ?></div>
+                    <span class="count_bottom"><?php echo $overall['unique_ratio']; ?>% of total prints</span>
                 </div>
-                
-                <div class="stat-card">
-                    <div class="stat-icon ratio">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <div class="stat-value"><?php echo $overall['active_days']; ?></div>
-                    <div class="stat-label">Active Days</div>
-                    <div class="stat-sub">Since <?php echo date('d M Y', strtotime($overall['first_print'])); ?></div>
+                <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count" style="flex: 1; min-width: 140px; margin-bottom: 10px;">
+                    <span class="count_top"><i class="fa fa-line-chart"></i> Active Days</span>
+                    <div class="count green" style="font-size: 26px; font-weight: bold;"><?php echo $overall['active_days']; ?></div>
+                    <span class="count_bottom">Since <?php echo date('d M Y', strtotime($overall['first_print'])); ?></span>
                 </div>
             </div>
             
