@@ -35,7 +35,7 @@ $result = mysqli_query($conn, $query);
     <div class="">
         <div class="page-title">
             <div class="title_left">
-                <h3><i class="fa fa-history"></i> System Audit Logs</h3>
+                <h3>System Audit Logs</h3>
             </div>
         </div>
 
@@ -45,7 +45,7 @@ $result = mysqli_query($conn, $query);
             <div class="col-md-12 col-sm-12 col-xs-12">
                 <div class="x_panel">
                     <div class="x_title">
-                        <h2><i class="fa fa-shield"></i> Security & Activity Audit Trail</h2>
+                        <h2>Security & Activity Audit Trail</h2>
                         <div class="clearfix"></div>
                     </div>
                     <div class="x_content">
