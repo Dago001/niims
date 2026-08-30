@@ -15,24 +15,6 @@ if (!in_array($_SESSION['role'], $allowed_roles)) {
 
 require_once ('db/db.php');
 
-// Include appropriate sidebar based on role
-if ($_SESSION['role'] == "SuperAdmin") {
-    include 'sidebar-superadmin.php';
-} elseif ($_SESSION['role'] == "Admin") {
-    include 'sidebar-admin.php';
-} elseif ($_SESSION['role'] == "Supervisor") {
-    include 'sidebar-supervisor.php';
-}
-
-
-include 'menu-footer-buttons.php';
-include 'top-navigation.php';
-
-// Which tab is active — "manage" is used when arriving from an action
-// (reset password, reset 2FA, activate/deactivate, profile edit) that
-// used to land on the standalone edit-user page.
-$activeTab = (isset($_GET['tab']) && $_GET['tab'] === 'manage') ? 'manage' : 'create';
-
 // ======= MANAGE USERS: activate / deactivate =======
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_id']) && isset($_POST['action'])) {
     $user_id = mysqli_real_escape_string($conn, $_POST['user_id']);
@@ -53,6 +35,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_id']) && isset($_
     header("Location: createuser?tab=manage");
     exit();
 }
+
+// Include appropriate sidebar based on role
+if ($_SESSION['role'] == "SuperAdmin") {
+    include 'sidebar-superadmin.php';
+} elseif ($_SESSION['role'] == "Admin") {
+    include 'sidebar-admin.php';
+} elseif ($_SESSION['role'] == "Supervisor") {
+    include 'sidebar-supervisor.php';
+}
+
+
+include 'menu-footer-buttons.php';
+include 'top-navigation.php';
+
+// Which tab is active — "manage" is used when arriving from an action
+// (reset password, reset 2FA, activate/deactivate, profile edit) that
+// used to land on the standalone edit-user page.
+$activeTab = (isset($_GET['tab']) && $_GET['tab'] === 'manage') ? 'manage' : 'create';
 
 // Check for success/error messages
 $userCreated = false;
