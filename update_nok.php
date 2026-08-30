@@ -210,43 +210,29 @@ while ($foundk = mysqli_fetch_array($retrieve)) {
 </style>
 
 <script>
-// Function to validate names (Next of Kin Name) - now with apostrophe and hyphen support
+// Function to validate names (Next of Kin Name)
 function validateName(input) {
-    // If field is empty, it's invalid (required field)
-    if (!input.value.trim()) {
-        input.setCustomValidity("Next of Kin Name is required.");
-        input.classList.add('is-invalid');
-        return;
-    }
+    // Allow alphabets, space, hyphen, single quote, and dot
+    input.value = input.value.replace(/[^a-zA-Z\s'\-.]/g, '');
     
-    // Updated regex to allow apostrophes (') and hyphens (-)
-    const regex = /^[A-Z][a-zA-Z\s'-]*$/; // First letter capital, alphabets, spaces, apostrophes and hyphens
-    if (!regex.test(input.value)) {
-        input.setCustomValidity("Only alphabets, apostrophes ('), hyphens (-) and spaces are allowed, and the first letter must be capital.");
-        input.classList.add('is-invalid'); // Add class to highlight invalid input
-    } else {
-        input.setCustomValidity("");
-        input.classList.remove('is-invalid'); // Remove class if input is valid
-    }
+    // Capitalize the first letter of each word
+    input.value = input.value.replace(/\b\w/g, (char) => char.toUpperCase());
+    
+    input.setCustomValidity("");
+    input.classList.remove('is-invalid');
 }
 
 // Function to validate phone numbers (NOK Phone Number)
 function validatePhone(input) {
-    // If field is empty, it's invalid (required field)
-    if (!input.value.trim()) {
-        input.setCustomValidity("NOK Phone Number is required.");
-        input.classList.add('is-invalid');
-        return;
+    // Remove non-numeric characters
+    input.value = input.value.replace(/[^0-9]/g, '');
+    
+    if (input.value.length > 11) {
+        input.value = input.value.substring(0, 11);
     }
     
-    const regex = /^\d{1,11}$/; // Only numbers, max 11 digits
-    if (!regex.test(input.value)) {
-        input.setCustomValidity("Only numbers are allowed, and it must not exceed 11 digits.");
-        input.classList.add('is-invalid'); // Add class to highlight invalid input
-    } else {
-        input.setCustomValidity("");
-        input.classList.remove('is-invalid'); // Remove class if input is valid
-    }
+    input.setCustomValidity("");
+    input.classList.remove('is-invalid');
 }
 
 // Attach oninput event listeners to all relevant fields
@@ -272,10 +258,7 @@ function validateForm() {
     let isValid = true;
 
     // Validate Next of Kin Name field (required)
-    if (nokField && !/^[A-Z][a-zA-Z\s'-]*$/.test(nokField.value)) {
-        nokField.classList.add('is-invalid');
-        isValid = false;
-    } else if (nokField && nokField.value.trim() === '') {
+    if (nokField && nokField.value.trim() === '') {
         nokField.classList.add('is-invalid');
         nokField.setCustomValidity("Next of Kin Name is required.");
         isValid = false;
@@ -285,10 +268,7 @@ function validateForm() {
     }
 
     // Validate NOK Phone field (required)
-    if (nokPhoneField && !/^\d{1,11}$/.test(nokPhoneField.value)) {
-        nokPhoneField.classList.add('is-invalid');
-        isValid = false;
-    } else if (nokPhoneField && nokPhoneField.value.trim() === '') {
+    if (nokPhoneField && nokPhoneField.value.trim() === '') {
         nokPhoneField.classList.add('is-invalid');
         nokPhoneField.setCustomValidity("NOK Phone Number is required.");
         isValid = false;
@@ -296,8 +276,6 @@ function validateForm() {
         nokPhoneField.classList.remove('is-invalid');
         nokPhoneField.setCustomValidity("");
     }
-
-    // Relationship field is NOT required - it will keep existing value if not changed
 
     if (!isValid) {
         // Only show alert if there are validation errors

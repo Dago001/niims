@@ -349,41 +349,32 @@ while ($foundk = mysqli_fetch_array($retrieve)) {
 
 <script>
 // Function to validate names (Surname, First Name, Middle Name, Town, LGA, Maiden Name)
-// Now allows apostrophes and hyphens
 function validateName(input) {
-    // If field is empty, it's valid (optional field)
-    if (!input.value.trim()) {
-        input.setCustomValidity("");
-        input.classList.remove('is-invalid');
-        return;
-    }
+    // Allow alphabets, space, hyphen, single quote, and dot
+    input.value = input.value.replace(/[^a-zA-Z\s'\-.]/g, '');
     
-    // Updated regex to allow apostrophes (') and hyphens (-)
-    const regex = /^[A-Z][a-zA-Z\s'-]*$/; // First letter capital, alphabets, spaces, apostrophes and hyphens
-    if (!regex.test(input.value)) {
-        input.setCustomValidity("Only alphabets, apostrophes (') and hyphens (-) are allowed, and the first letter must be capital.");
-        input.classList.add('is-invalid'); // Add class to highlight invalid input
-    } else {
-        input.setCustomValidity("");
-        input.classList.remove('is-invalid'); // Remove class if input is valid
-    }
+    // Capitalize the first letter of each word
+    input.value = input.value.replace(/\b\w/g, (char) => char.toUpperCase());
+    
+    input.setCustomValidity("");
+    input.classList.remove('is-invalid');
 }
 
 // Function to validate phone numbers (Phone No)
 function validatePhone(input) {
-    const regex = /^\d{1,11}$/; // Only numbers, max 11 digits
-    if (!regex.test(input.value)) {
-        input.setCustomValidity("Only numbers are allowed, and it must not exceed 11 digits.");
-        input.classList.add('is-invalid'); // Add class to highlight invalid input
-    } else {
-        input.setCustomValidity("");
-        input.classList.remove('is-invalid'); // Remove class if input is valid
+    // Remove non-numeric characters
+    input.value = input.value.replace(/[^0-9]/g, '');
+    
+    if (input.value.length > 11) {
+        input.value = input.value.substring(0, 11);
     }
+    
+    input.setCustomValidity("");
+    input.classList.remove('is-invalid');
 }
 
 // Function to validate email addresses (OPTIONAL - only validate if provided)
 function validateEmail(input) {
-    // If field is empty, it's valid (optional field)
     if (!input.value.trim()) {
         input.setCustomValidity("");
         input.classList.remove('is-invalid');
@@ -449,53 +440,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // Function to validate the entire form before submission
 function validateForm() {
-    const nameFields = document.querySelectorAll('input[name="lname"], input[name="fname"], input[name="mname"], input[name="town"], input[name="lga"], input[name="maiden_name"]');
-    const phoneField = document.querySelector('input[name="phone"]');
+    const lname = document.querySelector('input[name="lname"]');
+    const fname = document.querySelector('input[name="fname"]');
     const emailField = document.querySelector('input[name="email"]');
     const dobField = document.querySelector('input[name="dob"]');
 
     let isValid = true;
 
-    // Validate name fields - only if they have value (optional fields)
-    nameFields.forEach(input => {
-        // Only validate if field has content (optional fields)
-        if (input.value.trim()) {
-            // Check if it's Surname or First Name (required) or optional fields
-            if ((input.name === 'lname' || input.name === 'fname') && !/^[A-Z][a-zA-Z\s'-]*$/.test(input.value)) {
-                input.classList.add('is-invalid');
-                isValid = false;
-            } else if (input.value && !/^[A-Z][a-zA-Z\s'-]*$/.test(input.value)) {
-                // For optional fields, only validate if they have content
-                input.classList.add('is-invalid');
-                isValid = false;
-            } else {
-                input.classList.remove('is-invalid');
-            }
-        } else {
-            // Empty optional fields are valid
-            input.classList.remove('is-invalid');
-        }
-    });
-
-    // Validate phone field
-    if (phoneField && phoneField.value && !/^\d{1,11}$/.test(phoneField.value)) {
-        phoneField.classList.add('is-invalid');
+    // Required names check
+    if (lname && !lname.value.trim()) {
+        lname.classList.add('is-invalid');
         isValid = false;
-    } else if (phoneField) {
-        phoneField.classList.remove('is-invalid');
+    }
+    if (fname && !fname.value.trim()) {
+        fname.classList.add('is-invalid');
+        isValid = false;
     }
 
     // Validate email field - only if provided (optional)
     if (emailField && emailField.value.trim()) {
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailField.value)) {
-            emailField.classList.add('is-invalid');
+        validateEmail(emailField);
+        if (emailField.classList.contains('is-invalid')) {
             isValid = false;
-        } else {
-            emailField.classList.remove('is-invalid');
         }
-    } else if (emailField) {
-        // Empty email is valid (optional field)
-        emailField.classList.remove('is-invalid');
     }
     
     // Validate Date of Birth (required)

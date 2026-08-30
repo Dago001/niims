@@ -273,14 +273,34 @@ function validateForm() {
     return true;
 }
 
+// Function to validate text fields (Qualification, Institution)
+function validateText(input) {
+    // Allow alphabets, space, hyphen, single quote, and dot
+    input.value = input.value.replace(/[^a-zA-Z\s'\-.]/g, '');
+    
+    // Capitalize the first letter of each word
+    input.value = input.value.replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+// Function to validate and capitalize the certificate number
+function validateCertificateNumber(input) {
+    // Allow letters, numbers, hyphen, slash, underscore, apostrophe, dot, space, and some special chars
+    input.value = input.value.replace(/[^a-zA-Z0-9\-\/_\.' @#$%&*]/g, '');
+
+    // Convert letters to uppercase
+    input.value = input.value.toUpperCase();
+}
+
 // Real-time validation
 document.addEventListener('DOMContentLoaded', function() {
     const qualification = document.querySelector('input[name="qualification"]');
     const institution = document.querySelector('input[name="institution"]');
+    const certificateNumber = document.querySelector('input[name="certificate_number"]');
     const dateObtained = document.querySelector('input[name="date_obtained"]');
     
     if (qualification) {
         qualification.addEventListener('input', function() {
+            validateText(this);
             if (this.value.trim()) {
                 this.classList.remove('is-invalid');
             }
@@ -289,9 +309,16 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (institution) {
         institution.addEventListener('input', function() {
+            validateText(this);
             if (this.value.trim()) {
                 this.classList.remove('is-invalid');
             }
+        });
+    }
+
+    if (certificateNumber) {
+        certificateNumber.addEventListener('input', function() {
+            validateCertificateNumber(this);
         });
     }
     

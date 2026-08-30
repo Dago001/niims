@@ -119,10 +119,19 @@ $MENU_TOGGLE.on('click', function() {
 });
 
 	// check active menu
-	$SIDEBAR_MENU.find('a[href="' + CURRENT_URL + '"]').parent('li').addClass('current-page');
+	var mappedUrl = CURRENT_URL;
+	var updatePages = ['updatePersonal_info', 'update_nok', 'update_finance', 'update_employment', 'update_qualification', 'view_employee'];
+	for (var i = 0; i < updatePages.length; i++) {
+		if (CURRENT_URL.indexOf(updatePages[i]) !== -1) {
+			mappedUrl = CURRENT_URL.substring(0, CURRENT_URL.lastIndexOf('/') + 1) + 'enrolment-update';
+			break;
+		}
+	}
+
+	$SIDEBAR_MENU.find('a[href="' + mappedUrl + '"]').parent('li').addClass('current-page');
 
 	$SIDEBAR_MENU.find('a').filter(function () {
-		return this.href == CURRENT_URL;
+		return this.href == mappedUrl;
 	}).parent('li').addClass('current-page').parents('ul').slideDown(function() {
 		setContentHeight();
 	}).parent().addClass('active');

@@ -360,8 +360,8 @@ function validateForm() {
     // Clear previous error states
     document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
     
-    // Validate account number if provided (must be 10 digits)
-    if (accountNo.value.trim()) {
+    // Validate account number if provided (must be exactly 10 digits)
+    if (accountNo && accountNo.value.trim()) {
         const accountRegex = /^\d{10}$/;
         if (!accountRegex.test(accountNo.value)) {
             accountNo.classList.add('is-invalid');
@@ -369,18 +369,11 @@ function validateForm() {
         }
     }
     
-    // Validate IPPIS number if provided (alphanumeric allowed)
-    if (ippisNo.value.trim()) {
-        // Remove any hyphens for validation
-        const cleanValue = ippisNo.value.replace(/-/g, '');
-        // Allow letters and numbers
-        const ippisRegex = /^[A-Za-z0-9]+$/;
-        if (!ippisRegex.test(cleanValue)) {
+    // Validate IPPIS number if provided (must be exactly 9 characters starting with NI)
+    if (ippisNo && ippisNo.value.trim()) {
+        if (ippisNo.value.length !== 9 || !ippisNo.value.startsWith("NI")) {
             ippisNo.classList.add('is-invalid');
-            ippisNo.setCustomValidity("IPPIS number can only contain letters and numbers.");
             isValid = false;
-        } else {
-            ippisNo.setCustomValidity("");
         }
     }
     
@@ -392,26 +385,54 @@ function validateForm() {
     return true;
 }
 
+// IPPIS formatting function
+function validateIPPIS(input) {
+    let value = input.value.toUpperCase(); // Force uppercase
+    value = value.replace(/[^0-9NI]/g, ''); // Allow only N, I, and digits
+    
+    if (value.startsWith("NI")) {
+        const digits = value.substring(2); // Get part after "NI"
+        if (digits.length > 7) {
+            value = "NI" + digits.substring(0, 7); // Trim to 7 digits
+        }
+    } else {
+        value = "NI" + value.replace(/[^0-9]/g, '').substring(0, 7);
+    }
+    input.value = value;
+}
+
+// RSA (Pension No) formatting function
+function validateRSA(input) {
+    let value = input.value.toUpperCase();
+    value = value.replace(/[^0-9PEN]/g, ''); // Allow only P, E, N, and digits
+
+    if (value.startsWith("PEN")) {
+        const numbers = value.substring(3); // Get part after "PEN"
+        value = "PEN" + numbers.replace(/[^0-9]/g, ''); // Ensure only numbers after "PEN"
+    } else {
+        value = "PEN" + value.replace(/[^0-9]/g, '');
+    }
+    input.value = value;
+}
+
 // Real-time validation
 document.addEventListener('DOMContentLoaded', function() {
     const accountNo = document.querySelector('input[name="accountNo"]');
     const ippisNo = document.querySelector('input[name="ippis_no"]');
+    const pensionNo = document.querySelector('input[name="pensionNo"]');
+    const nhfNo = document.querySelector('input[name="nhf_no"]');
     
-    // Validate account number format
+    // Account Number input listener
     if (accountNo) {
         accountNo.addEventListener('input', function() {
-            // Allow only numbers
-            this.value = this.value.replace(/\D/g, '');
-            
-            // Validate length
-            if (this.value.length === 10 || this.value === '') {
-                this.classList.remove('is-invalid');
-            } else {
-                this.classList.add('is-invalid');
+            // Allow only numbers, max 10 digits
+            this.value = this.value.replace(/[^0-9]/g, '');
+            if (this.value.length > 10) {
+                this.value = this.value.substring(0, 10);
             }
+            this.classList.remove('is-invalid');
         });
         
-        // Validate on blur
         accountNo.addEventListener('blur', function() {
             if (this.value && this.value.length !== 10) {
                 this.classList.add('is-invalid');
@@ -420,63 +441,26 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // IPPIS number formatting and validation
+    // IPPIS input listener
     if (ippisNo) {
         ippisNo.addEventListener('input', function() {
-            // Convert to uppercase
-            this.value = this.value.toUpperCase();
-            
-            // Remove all non-alphanumeric characters except hyphens
-            let value = this.value.replace(/[^A-Za-z0-9\-]/g, '');
-            
-            // Format with hyphens (example: ABC-12345-X)
-            // This is optional formatting - you can adjust based on your IPPIS format needs
-            if (value.length > 3 && value.length <= 8) {
-                value = value.substring(0, 3) + '' + value.substring(3);
-            } else if (value.length > 8) {
-                value = value.substring(0, 3) + '' + value.substring(3, 8) + '' + value.substring(8, 9);
-            }
-            
-            this.value = value;
-            
-            // Clear validation
+            validateIPPIS(this);
             this.classList.remove('is-invalid');
-            this.setCustomValidity("");
-        });
-        
-        // Validate IPPIS format on blur
-        ippisNo.addEventListener('blur', function() {
-            if (this.value.trim()) {
-                // Remove hyphens for validation
-                const cleanValue = this.value.replace(/-/g, '');
-                const ippisRegex = /^[A-Z0-9]+$/;
-                
-                if (!ippisRegex.test(cleanValue)) {
-                    this.classList.add('is-invalid');
-                    this.setCustomValidity("IPPIS number can only contain letters and numbers.");
-                } else {
-                    this.classList.remove('is-invalid');
-                    this.setCustomValidity("");
-                }
-            }
         });
     }
     
-    // Format pension number
-    const pensionNo = document.querySelector('input[name="pensionNo"]');
+    // Pension Number input listener
     if (pensionNo) {
         pensionNo.addEventListener('input', function() {
-            // Convert to uppercase
-            this.value = this.value.toUpperCase();
+            validateRSA(this);
+            this.classList.remove('is-invalid');
         });
     }
     
-    // Format NHF number
-    const nhfNo = document.querySelector('input[name="nhf_no"]');
+    // NHF Number input listener (uppercase only)
     if (nhfNo) {
         nhfNo.addEventListener('input', function() {
-            // Convert to uppercase
-            this.value = this.value.toUpperCase();
+            this.value = this.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
         });
     }
 });
