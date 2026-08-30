@@ -10,6 +10,38 @@ if (!isset($_SESSION['username'])) {
     exit();
 }
 
+// ======= CSRF PROTECTION =======
+// All POST operations in this file are state-changing (writes to DB).
+// We validate a per-session CSRF token on every request to prevent
+// cross-site request forgery. Pages that POST here must include the token.
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $valid_tokens = [];
+    // Collect all known CSRF tokens from session
+    foreach ($_SESSION as $key => $val) {
+        if (strpos($key, '_csrf_token') !== false) {
+            $valid_tokens[] = $val;
+        }
+    }
+    // Also check the generic updates CSRF token
+    if (empty($_SESSION['updates_csrf_token'])) {
+        $_SESSION['updates_csrf_token'] = bin2hex(random_bytes(32));
+    }
+    $valid_tokens[] = $_SESSION['updates_csrf_token'];
+
+    $submitted_token = $_POST['csrf_token'] ?? '';
+    $token_valid = false;
+    foreach ($valid_tokens as $t) {
+        if (hash_equals($t, $submitted_token)) {
+            $token_valid = true;
+            break;
+        }
+    }
+    if (!$token_valid) {
+        http_response_code(403);
+        die(json_encode(['error' => 'Invalid security token. Please refresh the page and try again.']));
+    }
+}
+
 require_once('db/db.php');
 require_once('functions/password_helper.php');
 

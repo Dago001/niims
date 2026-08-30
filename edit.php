@@ -22,6 +22,11 @@ if ($_SESSION['role'] == "SuperAdmin") {
 // Validate and sanitize ID parameter
 $id = isset($_GET['id']) ? mysqli_real_escape_string($conn, $_GET['id']) : '';
 
+// Generate CSRF token for the edit form that POSTs to updates.php
+if (empty($_SESSION['updates_csrf_token'])) {
+    $_SESSION['updates_csrf_token'] = bin2hex(random_bytes(32));
+}
+
 if (empty($id)) {
     $_SESSION['profile_update_error'] = true;
     $_SESSION['profile_update_message'] = "Invalid user ID.";
@@ -136,6 +141,7 @@ include 'top-navigation.php';
             <div class="col-md-8 col-sm-12">
                 <div class="card">
                     <form class="form-horizontal" enctype="multipart/form-data" action="updates" method="POST" id="updateForm">
+                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['updates_csrf_token']); ?>">
                         <div class="card-body">
                             <h4 class="card-title">
                                 <i class="fa fa-user-edit"></i> Update User Profile

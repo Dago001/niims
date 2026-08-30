@@ -33,6 +33,11 @@
   include 'top-navigation.php';
 
   $forcedPasswordChange = !empty($_SESSION['must_change_password']);
+
+  // Generate CSRF token for the form that POSTs to updates.php
+  if (empty($_SESSION['updates_csrf_token'])) {
+      $_SESSION['updates_csrf_token'] = bin2hex(random_bytes(32));
+  }
   ?>
   <style>
     .forced-password-alert {
@@ -111,6 +116,7 @@
             <div class="col-md-6">
               <div class="card">
                 <form class="form-horizontal" enctype="multipart/form-data" action="updates" method="POST" id="changePasswordForm">
+                  <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['updates_csrf_token']); ?>">
                   <div class="card-body">
                     <h4 class="card-title">Password Management</h4>
                     <div class="form-group row">

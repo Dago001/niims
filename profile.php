@@ -76,6 +76,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif ($fileSize > 5 * 1024 * 1024) { // 5MB limit
                 $errorMessage = "Upload Failed: Photo size must be less than 5MB.";
             } else {
+                // SECURITY: Validate actual file MIME type using finfo (not just extension)
+                // This prevents PHP scripts being uploaded with a .jpg extension
+                $allowedMimes = ['image/jpeg', 'image/png'];
+                $finfo = new finfo(FILEINFO_MIME_TYPE);
+                $detectedMime = $finfo->file($fileTmpPath);
+                if (!in_array($detectedMime, $allowedMimes)) {
+                    $errorMessage = "Upload Failed: File content does not match an allowed image type.";
+                } else {
                 $uploadDir = 'upload/';
                 if (!file_exists($uploadDir)) {
                     mkdir($uploadDir, 0755, true);
@@ -108,6 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         }
+    }
 
         // 2. Handle Other Profile Details Update
         if (isset($_POST['updateOwnProfile'])) {

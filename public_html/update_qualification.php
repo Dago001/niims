@@ -21,10 +21,20 @@ if ($_SESSION['role'] == "Supervisor") {
 include 'menu-footer-buttons.php';
 include 'top-navigation.php';
 
-$id = isset($_GET['id']) ? $_GET['id'] : '';
+$id = isset($_GET['id']) ? mysqli_real_escape_string($conn, $_GET['id']) : '';
+
+// Generate CSRF token for this page
+if (empty($_SESSION['qualification_csrf_token'])) {
+    $_SESSION['qualification_csrf_token'] = bin2hex(random_bytes(32));
+}
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['updateQualification'])) {
+    // CSRF validation
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['qualification_csrf_token'], $_POST['csrf_token'])) {
+        die("Security token invalid. Please go back and try again.");
+    }
+
     // Sanitize and get form data
     $serviceNo = mysqli_real_escape_string($conn, $_POST['serviceNo']);
     $qualification = mysqli_real_escape_string($conn, $_POST['qualification']);
@@ -140,6 +150,7 @@ if (mysqli_num_rows($qual_result) > 0) {
                     <p>You can edit all fields below</p>
                     
                     <form method="post" action="" class="form-horizontal form-label-left" onsubmit="return validateForm()">
+                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['qualification_csrf_token']); ?>">
                         <!-- Service No and Personal Info -->
                         <fieldset>
                             <div class="form-group">

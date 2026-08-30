@@ -21,10 +21,20 @@ if ($_SESSION['role'] == "Supervisor") {
 include 'menu-footer-buttons.php';
 include 'top-navigation.php';
 
-$id = isset($_GET['id']) ? $_GET['id'] : '';
+$id = isset($_GET['id']) ? mysqli_real_escape_string($conn, $_GET['id']) : '';
+
+// Generate CSRF token for this page
+if (empty($_SESSION['finance_csrf_token'])) {
+    $_SESSION['finance_csrf_token'] = bin2hex(random_bytes(32));
+}
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['updateFinance'])) {
+    // CSRF validation
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['finance_csrf_token'], $_POST['csrf_token'])) {
+        die("Security token invalid. Please go back and try again.");
+    }
+
     // Sanitize and get form data
     $serviceNo = mysqli_real_escape_string($conn, $_POST['serviceNo']);
     $ippis_no = mysqli_real_escape_string($conn, $_POST['ippis_no']);
@@ -233,6 +243,7 @@ $pfas = [
                     <p><small><em></em></small></p>
                     
                     <form method="post" action="" class="form-horizontal form-label-left" onsubmit="return validateForm()">
+                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['finance_csrf_token']); ?>">
                         <!-- Service No and Personal Info -->
                         <fieldset>
                             <div class="form-group">

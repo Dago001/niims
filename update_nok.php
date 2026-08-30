@@ -19,8 +19,18 @@ if ($_SESSION['role'] == "SuperAdmin") {
 include 'menu-footer-buttons.php';
 include 'top-navigation.php';
 
+// Generate CSRF token for this page
+if (empty($_SESSION['nok_csrf_token'])) {
+    $_SESSION['nok_csrf_token'] = bin2hex(random_bytes(32));
+}
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['updateNOK'])) {
+    // CSRF validation
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['nok_csrf_token'], $_POST['csrf_token'])) {
+        die("Security token invalid. Please go back and try again.");
+    }
+
     // Sanitize and get form data
     $serviceNo = mysqli_real_escape_string($conn, $_POST['serviceNo']);
     $nok = mysqli_real_escape_string($conn, $_POST['nok']);
@@ -100,6 +110,7 @@ while ($foundk = mysqli_fetch_array($retrieve)) {
                     <div>
                         
                         <form method="post" action="" class="form-horizontal form-label-left" onsubmit="return validateForm()">
+                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['nok_csrf_token']); ?>">
                             <fieldset>
                                 <div>
                                     <div class="form-group">

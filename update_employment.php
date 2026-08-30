@@ -21,10 +21,20 @@ include 'menu-footer-buttons.php';
 include 'top-navigation.php';
 
 // Get the service number from URL parameter
-$id = isset($_GET['id']) ? $_GET['id'] : '';
+$id = isset($_GET['id']) ? mysqli_real_escape_string($conn, $_GET['id']) : '';
+
+// Generate CSRF token for this page
+if (empty($_SESSION['employment_csrf_token'])) {
+    $_SESSION['employment_csrf_token'] = bin2hex(random_bytes(32));
+}
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['regEmployee'])) {
+    // CSRF validation
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['employment_csrf_token'], $_POST['csrf_token'])) {
+        die("Security token invalid. Please go back and try again.");
+    }
+
     // Sanitize and get form data
     $serviceNo = mysqli_real_escape_string($conn, $id);
     $dofa = mysqli_real_escape_string($conn, $_POST['dofa']);
@@ -192,6 +202,7 @@ if ($id) {
                     <div class="form_wizard wizard_horizontal">
                         
                         <form method="post" action="" class="form-horizontal form-label-left" onsubmit="return validateForm()">
+                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['employment_csrf_token']); ?>">
                             <?php if ($id): ?>
                                 <input type="hidden" name="serviceNo" value="<?php echo htmlspecialchars($id); ?>">
                             <?php endif; ?>

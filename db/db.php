@@ -18,7 +18,10 @@ define('DB_DATABASE', 'niimscom_idcard');
 $conn = mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
 
 if (!$conn) {
-    die("Connection failed: " . mysqli_connect_error());
+    // Log the real error server-side, never expose it to the browser
+    error_log("Database connection failed: " . mysqli_connect_error());
+    http_response_code(503);
+    die("Service temporarily unavailable. Please try again later.");
 }
 
 // Set character set
