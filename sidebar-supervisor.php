@@ -24,6 +24,7 @@
     <link href="vendors/font-awesome/css/font-awesome.min.css" rel="stylesheet">
     <!-- NProgress -->
     <link href="vendors/nprogress/nprogress.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
     <!-- iCheck -->
     <link href="vendors/iCheck/skins/flat/green.css" rel="stylesheet">
 	
@@ -95,7 +96,7 @@
                   </li>
                   <li><a><i class="fa fa-edit"></i> Enrolment <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
-                      <!--<li><a href="enrol_employee">New Enrolment</a></li>-->
+                      <li><a href="enrol_employee">New Enrolment</a></li>
                       <!--<li><a href="cgi_view">View All Enrolment</a></li> -->
                       <li><a href="myenrolments">View My Enrolment</a></li>
                       <!--<li><a href="print-enrolment">Print Enrolment Slip</a></li> -->                    

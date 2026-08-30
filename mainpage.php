@@ -65,6 +65,17 @@ $numb4 = mysqli_num_rows($user_ret);
 $numb5 = mysqli_num_rows($retrieve5);
 $numb6 = mysqli_num_rows($retrieve6);
 
+$my_enrolled_count = 0;
+if (isset($_SESSION['user_id'])) {
+    $current_user_id = mysqli_real_escape_string($conn, $_SESSION['user_id']);
+    $sql_my_enrolled = "SELECT COUNT(*) as enrolled_count FROM tbl_emppersonal WHERE user_id = '$current_user_id'";
+    $result_my_enrolled = mysqli_query($conn, $sql_my_enrolled);
+    if ($result_my_enrolled) {
+        $row_my_enrolled = mysqli_fetch_assoc($result_my_enrolled);
+        $my_enrolled_count = $row_my_enrolled['enrolled_count'];
+    }
+}
+
 $cgi = "SELECT em.* FROM tbl_employment em JOIN tbl_emppersonal ep ON em.serviceNo = ep.serviceNo WHERE em.currentRank='Comptroller General' AND $active_cond";
 $dcg = "SELECT em.* FROM tbl_employment em JOIN tbl_emppersonal ep ON em.serviceNo = ep.serviceNo WHERE em.currentRank='Dep. Comptroller General' AND $active_cond";
 $acg = "SELECT em.* FROM tbl_employment em JOIN tbl_emppersonal ep ON em.serviceNo = ep.serviceNo WHERE em.currentRank='Asst. Comptroller General' AND $active_cond";
@@ -242,6 +253,12 @@ if ($result3) {
               <span class="count_top"><i class="fa fa-venus"></i> Active Females</span>
               <div class="count blue" style="font-size: 30px; font-weight: bold;"><?php echo $numb3; ?></div>
             </div>
+            <?php if ($_SESSION['role'] == "Supervisor" || $_SESSION['role'] == "Admin" || $_SESSION['role'] == "SuperAdmin"): ?>
+            <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count" style="flex: 1; min-width: 140px; margin-bottom: 10px;">
+              <span class="count_top"><i class="fa fa-user-plus"></i> My Enrolments</span>
+              <div class="count green" style="font-size: 30px; font-weight: bold;"><?php echo $my_enrolled_count; ?></div>
+            </div>
+            <?php endif; ?>
             <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count" style="flex: 1; min-width: 140px; margin-bottom: 10px;">
               <span class="count_top"><i class="fa fa-cogs"></i> System Users</span>
               <div class="count red" style="font-size: 30px; font-weight: bold;"><?php echo $numb4; ?></div>
