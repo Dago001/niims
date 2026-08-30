@@ -8,26 +8,7 @@ if (!isset($_SESSION['username'])) {
 
 require_once('db/db.php');
 
-// Include appropriate sidebar based on role
-if ($_SESSION['role'] == "Admin") {
-    include 'sidebar-admin.php';
-} elseif ($_SESSION['role'] == "SuperAdmin") {
-    include 'sidebar-superadmin.php';
-} elseif ($_SESSION['role'] == "Supervisor") {
-    include 'sidebar-supervisor.php';
-} elseif ($_SESSION['role'] == "CGI") {
-    include 'sidebar-cgi.php';
-}
-
-include 'menu-footer-buttons.php';
-include 'top-navigation.php';
-
-// Add pagination
-$page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
-$records_per_page = 50;
-$offset = ($page - 1) * $records_per_page;
-
-// Handle POST card status update (Single or Bulk)
+// Handle POST card status update (Single or Bulk) — BEFORE HTML includes so headers can be sent
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_type']) && $_POST['action_type'] === 'update_card_status') {
     $allowed_roles = ['SuperAdmin', 'Admin', 'Supervisor'];
     if (isset($_SESSION['role']) && in_array($_SESSION['role'], $allowed_roles)) {
@@ -67,6 +48,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_type']) && $_P
     header("Location: printed-cards");
     exit();
 }
+
+// Include appropriate sidebar based on role
+if ($_SESSION['role'] == "Admin") {
+    include 'sidebar-admin.php';
+} elseif ($_SESSION['role'] == "SuperAdmin") {
+    include 'sidebar-superadmin.php';
+} elseif ($_SESSION['role'] == "Supervisor") {
+    include 'sidebar-supervisor.php';
+} elseif ($_SESSION['role'] == "CGI") {
+    include 'sidebar-cgi.php';
+}
+
+include 'menu-footer-buttons.php';
+include 'top-navigation.php';
+
+// Add pagination
+$page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+$records_per_page = 50;
+$offset = ($page - 1) * $records_per_page;
 
 // Date range & status filter
 $date_from = isset($_GET['date_from']) ? trim($_GET['date_from']) : '';
