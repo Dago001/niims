@@ -31,6 +31,9 @@ echo "<img src=\"barcode.png\" alt=\"Barcode\">"; */
 </head>
 <body>
 <script type="text/javascript">
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+    });
     window.print();
 </script>
     <style>

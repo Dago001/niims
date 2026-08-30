@@ -5005,6 +5005,10 @@ if (typeof NProgress != 'undefined') {
 	   
 	   
 	$(document).ready(function() {
+		// Disable right click globally in the entire application
+		document.addEventListener('contextmenu', function(e) {
+			e.preventDefault();
+		});
 				
 		init_sparklines();
 		init_flot_chart();

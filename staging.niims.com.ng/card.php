@@ -1,6 +1,6 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+error_reporting(0);
+ini_set('display_errors', 0);
 session_start();
 
 // Check if user is logged in
@@ -822,8 +822,8 @@ if (!$photoFound) {
                         (<?php echo htmlspecialchars($print['printed_by_role'] ?? 'Unknown'); ?>)
                     </div>
                     <div class="print-history-date">
-                        <i class="far fa-calendar-alt"></i> <?php echo $print['formatted_date'] ?? 'Date not available'; ?>
-                        <span class="print-history-method"><?php echo ucfirst($print['print_method'] ?? 'single'); ?></span>
+                        <i class="far fa-calendar-alt"></i> <?php echo htmlspecialchars($print['formatted_date'] ?? 'Date not available'); ?>
+                        <span class="print-history-method"><?php echo htmlspecialchars(ucfirst($print['print_method'] ?? 'single')); ?></span>
                     </div>
                 </div>
             </div>
@@ -1012,6 +1012,11 @@ if (!$photoFound) {
 </div>
 
 <script>
+// Disable right click globally in the entire application
+document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+});
+
 // SIMPLE FONT FIX FOR PRINTING
 (function() {
     const fontLoader = document.createElement('div');

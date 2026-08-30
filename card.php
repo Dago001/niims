@@ -1012,6 +1012,11 @@ if (!$photoFound) {
 </div>
 
 <script>
+// Disable right click globally in the entire application
+document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+});
+
 // SIMPLE FONT FIX FOR PRINTING
 (function() {
     const fontLoader = document.createElement('div');
