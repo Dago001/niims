@@ -1095,6 +1095,11 @@ if ($retrieve && $numb > 0) {
             document.getElementById('loadingSpinner').style.display = 'none';
         }
         
+        // Reset loading spinner on back/forward browser navigation
+        window.addEventListener('pageshow', function(event) {
+            hideLoading();
+        });
+        
         // Set quick search value
         function setSearch(value) {
             document.getElementById('searchInput').value = value;
