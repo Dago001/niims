@@ -334,7 +334,7 @@ if (isset($_POST['verify_2fa'])) {
                     if ($_SESSION['must_change_password']) {
                         header("Location: changePassword");
                         exit();
-                    } elseif ($_SESSION['role'] == "Admin") {
+                    } elseif (in_array($_SESSION['role'], ['SuperAdmin', 'Admin', 'Supervisor', 'Report'])) {
                         header("Location: mainpage");
                         exit();
                     } else {
