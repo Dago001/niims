@@ -38,7 +38,6 @@
   
     <!-- Custom Theme Style -->
     <link href="build/css/custom.css" rel="stylesheet">
-    <script src="js/lga.js"></script>
 
 
   </head>
