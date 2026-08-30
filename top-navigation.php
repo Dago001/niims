@@ -9,7 +9,17 @@
               <ul class="nav navbar-nav navbar-right">
                 <li class="">
                   <a href="javascript:;" class="user-profile dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-                    <img src="upload/<?php echo htmlspecialchars($_SESSION['user_id']); ?>.png" alt=""><?php echo htmlspecialchars($_SESSION['username']); ?>
+                    <?php
+                    $navPhotoSrc = 'upload/default.png';
+                    if (!empty($_SESSION['photo']) && file_exists($_SESSION['photo'])) {
+                        $navPhotoSrc = $_SESSION['photo'];
+                    } elseif (file_exists('upload/' . $_SESSION['user_id'] . '.png')) {
+                        $navPhotoSrc = 'upload/' . $_SESSION['user_id'] . '.png';
+                    } elseif (file_exists('images/' . $_SESSION['user_id'] . '.jpg')) {
+                        $navPhotoSrc = 'images/' . $_SESSION['user_id'] . '.jpg';
+                    }
+                    ?>
+                    <img src="<?php echo htmlspecialchars($navPhotoSrc); ?>" alt="" onerror="this.onerror=null; this.src='upload/default.png';"><?php echo htmlspecialchars($_SESSION['username']); ?>
                     <span class=" fa fa-angle-down"></span>
                   </a>
                   <ul class="dropdown-menu dropdown-usermenu pull-right">

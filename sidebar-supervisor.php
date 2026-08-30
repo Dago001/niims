@@ -73,7 +73,17 @@
             <!-- menu profile quick info -->
             <div class="profile clearfix">
               <div class="profile_pic">
-                <img src="images/<?php echo $_SESSION['user_id']; ?>.jpg" alt="..." class="img-circle profile_img">
+                <?php
+                $sidebarPhotoSrc = 'upload/default.png';
+                if (!empty($_SESSION['photo']) && file_exists($_SESSION['photo'])) {
+                    $sidebarPhotoSrc = $_SESSION['photo'];
+                } elseif (file_exists('upload/' . $_SESSION['user_id'] . '.png')) {
+                    $sidebarPhotoSrc = 'upload/' . $_SESSION['user_id'] . '.png';
+                } elseif (file_exists('images/' . $_SESSION['user_id'] . '.jpg')) {
+                    $sidebarPhotoSrc = 'images/' . $_SESSION['user_id'] . '.jpg';
+                }
+                ?>
+                <img src="<?php echo htmlspecialchars($sidebarPhotoSrc); ?>" alt="..." class="img-circle profile_img" onerror="this.onerror=null; this.src='upload/default.png';">
               </div>
               <div class="profile_info">
                 <span>Welcome,</span>

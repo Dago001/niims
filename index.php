@@ -317,6 +317,7 @@ if (isset($_POST['verify_2fa'])) {
                     $_SESSION['user_id'] = $row['user_id'];
                     $_SESSION['email'] = $row['email_address'];
                     $_SESSION['role'] = $row['user_role'];
+                    $_SESSION['photo'] = !empty($row['photo']) ? $row['photo'] : '';
                     $_SESSION['must_change_password'] = !empty($row['must_change_password']) ? 1 : 0;
                     $_SESSION['logged_in'] = true;
                     $_SESSION['login_time'] = time();

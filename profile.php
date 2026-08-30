@@ -59,42 +59,91 @@ if (empty($_SESSION['profile_csrf_token'])) {
 $successMessage = '';
 $errorMessage = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['updateOwnProfile'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['profile_csrf_token'], $_POST['csrf_token'])) {
         $errorMessage = "Security token invalid. Please refresh the page and try again.";
     } else {
-        $firstname = trim($_POST['firstname'] ?? '');
-        $lastname = trim($_POST['lastname'] ?? '');
-        $email = trim($_POST['email'] ?? '');
+        // 1. Handle Photo Upload
+        if (isset($_FILES['profile_photo']) && $_FILES['profile_photo']['error'] === UPLOAD_ERR_OK) {
+            $fileTmpPath = $_FILES['profile_photo']['tmp_name'];
+            $fileName = $_FILES['profile_photo']['name'];
+            $fileSize = $_FILES['profile_photo']['size'];
+            $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+            $allowedExtensions = array('jpg', 'jpeg', 'png');
 
-        if ($firstname === '' || $lastname === '') {
-            $errorMessage = "First and last name are required.";
-        } elseif ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $errorMessage = "Please enter a valid email address.";
-        } else {
-            $firstname = mb_substr($firstname, 0, 50);
-            $lastname = mb_substr($lastname, 0, 50);
-            $email = mb_substr($email, 0, 100);
-
-            // Note: user_role is deliberately not editable here — changing
-            // one's own role would be a self-privilege-escalation path, and
-            // stays restricted to the admin-only User Management flow.
-            $update_stmt = mysqli_prepare($conn, "UPDATE tbl_users SET firstname = ?, lastname = ?, email_address = ? WHERE user_id = ?");
-            mysqli_stmt_bind_param($update_stmt, "ssss", $firstname, $lastname, $email, $user_id);
-
-            if (mysqli_stmt_execute($update_stmt)) {
-                $successMessage = "Profile updated successfully.";
-                $account['firstname'] = $firstname;
-                $account['lastname'] = $lastname;
-                $account['email_address'] = $email;
-                // Keep the session in sync with what's now stored, since
-                // top-navigation.php and the rest of the app display these.
-                $_SESSION['username'] = $lastname;
-                $_SESSION['email'] = $email;
+            if (!in_array($fileExtension, $allowedExtensions)) {
+                $errorMessage = "Upload Failed: Only JPG, JPEG, and PNG files are allowed.";
+            } elseif ($fileSize > 5 * 1024 * 1024) { // 5MB limit
+                $errorMessage = "Upload Failed: Photo size must be less than 5MB.";
             } else {
-                $errorMessage = "Failed to update profile. Please try again.";
+                $uploadDir = 'upload/';
+                if (!file_exists($uploadDir)) {
+                    mkdir($uploadDir, 0755, true);
+                }
+
+                $newFileName = $user_id . '.' . $fileExtension;
+                $dest_path = $uploadDir . $newFileName;
+
+                // Delete any old files with different extensions
+                foreach ($allowedExtensions as $ext) {
+                    $oldFile = $uploadDir . $user_id . '.' . $ext;
+                    if (file_exists($oldFile) && $oldFile !== $dest_path) {
+                        @unlink($oldFile);
+                    }
+                }
+
+                if (move_uploaded_file($fileTmpPath, $dest_path)) {
+                    $update_photo_stmt = mysqli_prepare($conn, "UPDATE tbl_users SET photo = ? WHERE user_id = ?");
+                    mysqli_stmt_bind_param($update_photo_stmt, "ss", $dest_path, $user_id);
+                    if (mysqli_stmt_execute($update_photo_stmt)) {
+                        $successMessage = "Profile photo updated successfully.";
+                        $account['photo'] = $dest_path;
+                        $_SESSION['photo'] = $dest_path;
+                    } else {
+                        $errorMessage = "Failed to update profile photo in database.";
+                    }
+                    mysqli_stmt_close($update_photo_stmt);
+                } else {
+                    $errorMessage = "Failed to save uploaded file.";
+                }
             }
-            mysqli_stmt_close($update_stmt);
+        }
+
+        // 2. Handle Other Profile Details Update
+        if (isset($_POST['updateOwnProfile'])) {
+            $firstname = trim($_POST['firstname'] ?? '');
+            $lastname = trim($_POST['lastname'] ?? '');
+            $email = trim($_POST['email'] ?? '');
+
+            if ($firstname === '' || $lastname === '') {
+                $errorMessage = "First and last name are required.";
+            } elseif ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $errorMessage = "Please enter a valid email address.";
+            } else {
+                $firstname = mb_substr($firstname, 0, 50);
+                $lastname = mb_substr($lastname, 0, 50);
+                $email = mb_substr($email, 0, 100);
+
+                // Note: user_role is deliberately not editable here — changing
+                // one's own role would be a self-privilege-escalation path, and
+                // stays restricted to the admin-only User Management flow.
+                $update_stmt = mysqli_prepare($conn, "UPDATE tbl_users SET firstname = ?, lastname = ?, email_address = ? WHERE user_id = ?");
+                mysqli_stmt_bind_param($update_stmt, "ssss", $firstname, $lastname, $email, $user_id);
+
+                if (mysqli_stmt_execute($update_stmt)) {
+                    $successMessage = "Profile updated successfully.";
+                    $account['firstname'] = $firstname;
+                    $account['lastname'] = $lastname;
+                    $account['email_address'] = $email;
+                    // Keep the session in sync with what's now stored, since
+                    // top-navigation.php and the rest of the app display these.
+                    $_SESSION['username'] = $lastname;
+                    $_SESSION['email'] = $email;
+                } else {
+                    $errorMessage = "Failed to update profile. Please try again.";
+                }
+                mysqli_stmt_close($update_stmt);
+            }
         }
     }
 }
@@ -104,6 +153,8 @@ if (!empty($account['photo']) && file_exists($account['photo'])) {
     $photoSrc = $account['photo'];
 } elseif (file_exists('upload/' . $user_id . '.png')) {
     $photoSrc = 'upload/' . $user_id . '.png';
+} elseif (file_exists('images/' . $user_id . '.jpg')) {
+    $photoSrc = 'images/' . $user_id . '.jpg';
 }
 ?>
 <style>
@@ -146,7 +197,16 @@ if (!empty($account['photo']) && file_exists($account['photo'])) {
         <div class="profile-card">
           <div class="card-body">
             <div class="profile-photo-wrap">
-              <img src="<?php echo htmlspecialchars($photoSrc); ?>" alt="Profile Photo" onerror="this.onerror=null; this.src='upload/default.png';">
+              <img src="<?php echo htmlspecialchars($photoSrc); ?>" alt="Profile Photo" onerror="this.onerror=null; this.src='upload/default.png';" style="margin-bottom:12px;">
+              <form method="POST" action="profile" enctype="multipart/form-data" style="margin-top: 10px;">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['profile_csrf_token']); ?>">
+                <div style="position: relative; overflow: hidden; display: inline-block;">
+                  <button class="btn btn-xs btn-primary" type="button" onclick="document.getElementById('profile_photo_input').click();">
+                    <i class="fa fa-camera"></i> Change Photo
+                  </button>
+                  <input type="file" id="profile_photo_input" name="profile_photo" accept="image/png, image/jpeg, image/jpg" style="display: none;" onchange="this.form.submit();">
+                </div>
+              </form>
             </div>
             <div class="profile-readonly-row">
               <span class="profile-readonly-label">Service No.</span>
