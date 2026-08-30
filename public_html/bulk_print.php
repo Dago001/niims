@@ -398,162 +398,11 @@ $total_filtered_records = $all_retrieve ? mysqli_num_rows($all_retrieve) : 0;
             border-radius: 6px;
         }
         
-        /* Professional Filter Section - Enhanced */
-        .filter-section {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            margin-bottom: 25px;
-            border: 1px solid #e0e0e0;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        }
-        
-        .filter-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #f8f9fa;
-        }
-        
-        .filter-title {
-            color: #2c3e50;
-            font-size: 22px;
-            font-weight: 600;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .filter-title i {
-            color: #27ae60;
-            font-size: 24px;
-        }
-        
-        .filter-stats {
-            font-size: 14px;
-            color: #666;
-            background: #f8f9fa;
-            padding: 10px 20px;
-            border-radius: 30px;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .filter-stats i {
-            color: #27ae60;
-            font-size: 16px;
-        }
-        
-        .filter-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 25px;
-            margin-bottom: 25px;
-        }
-        
-        .filter-group {
-            margin-bottom: 0;
-        }
-        
-        .filter-label {
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 10px;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .filter-label i {
-            color: #27ae60;
-            font-size: 16px;
-            width: 20px;
-            text-align: center;
-        }
-        
-        .filter-input, .filter-select {
-            width: 100%;
-            padding: 14px 18px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: all 0.3s;
-            background: #f8f9fa;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        .filter-input:focus, .filter-select:focus {
-            outline: none;
-            border-color: #27ae60;
-            background: white;
-            box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.15);
-        }
-        
-        .filter-input::placeholder {
-            color: #95a5a6;
-        }
-        
-        .filter-actions {
-            display: flex;
-            gap: 15px;
-            justify-content: flex-end;
-            padding-top: 25px;
-            border-top: 1px solid #f8f9fa;
-            flex-wrap: wrap;
-        }
-        
-        /* Button Styles */
-        .btn {
-            padding: 14px 30px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: all 0.3s;
-            border: none;
-            cursor: pointer;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #27ae60, #219a52);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: linear-gradient(135deg, #219a52, #1e8749);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.25);
-        }
-        
-        .btn-secondary {
-            background: linear-gradient(135deg, #6c757d, #5a6268);
-            color: white;
-        }
-        
-        .btn-secondary:hover {
-            background: linear-gradient(135deg, #5a6268, #495057);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(108, 117, 125, 0.25);
-        }
-        
-        .btn-warning {
-            background: linear-gradient(135deg, #ffc107, #e0a800);
-            color: #333;
-        }
-        
-        .btn-warning:hover {
-            background: linear-gradient(135deg, #e0a800, #d39e00);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 193, 7, 0.25);
+        /* Native Gentelella Styling Tweaks */
+        .filter-badge {
+            display: inline-block;
+            margin-right: 5px;
+            margin-bottom: 5px;
         }
         
         /* Results Section */
@@ -1183,145 +1032,123 @@ $total_filtered_records = $all_retrieve ? mysqli_num_rows($all_retrieve) : 0;
             </div>
             <div class="clearfix"></div>
             
-            <!-- Professional Filter Section -->
-            <div class="filter-section">
-                <div class="filter-header">
-                    <h3 class="filter-title">
-                        <i class="fas fa-filter"></i> Filter Personnel
-                    </h3>
-                    <div class="filter-stats">
-                        <i class="fas fa-database"></i>
-                        Total Records: <?php echo number_format($total_records); ?>
-                    </div>
+            <!-- Filter Section (Standard Gentelella Theme Styling) -->
+            <div class="x_panel">
+                <div class="x_title">
+                    <h2><i class="fa fa-filter"></i> Filter Personnel <small>Total Records: <?php echo number_format($total_records); ?></small></h2>
+                    <div class="clearfix"></div>
                 </div>
-                
-                <form method="GET" action="" id="filterForm">
-                    <!-- Include page parameter in form -->
-                    <input type="hidden" name="page" value="<?php echo $page; ?>" id="pageInput">
-                    
-                    <div class="filter-grid">
-                        <!-- Current Posting Filter -->
-                        <div class="filter-group">
-                            <label class="filter-label">
-                                <i class="fas fa-map-marker-alt"></i> Current Posting
-                            </label>
-                            <select class="filter-select" name="posting" id="postingFilter">
-                                <option value="">All Postings</option>
-                                <?php foreach ($postings as $posting): ?>
-                                    <option value="<?php echo htmlspecialchars($posting); ?>" 
-                                        <?php echo $filters['posting'] == $posting ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($posting); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
+                <div class="x_content">
+                    <form method="GET" action="" id="filterForm">
+                        <!-- Include page parameter in form -->
+                        <input type="hidden" name="page" value="<?php echo $page; ?>" id="pageInput">
+                        
+                        <div class="row">
+                            <!-- Current Posting Filter -->
+                            <div class="col-md-3 col-sm-6 col-xs-12 form-group">
+                                <label><i class="fa fa-map-marker"></i> Current Posting</label>
+                                <select class="form-control" name="posting" id="postingFilter">
+                                    <option value="">All Postings</option>
+                                    <?php foreach ($postings as $posting): ?>
+                                        <option value="<?php echo htmlspecialchars($posting); ?>" 
+                                            <?php echo $filters['posting'] == $posting ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($posting); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            
+                            <!-- Rank Filter -->
+                            <div class="col-md-3 col-sm-6 col-xs-12 form-group">
+                                <label><i class="fa fa-star"></i> Rank</label>
+                                <select class="form-control" name="rank" id="rankFilter">
+                                    <option value="">All Ranks</option>
+                                    <?php foreach ($ranks as $rank): ?>
+                                        <option value="<?php echo htmlspecialchars($rank); ?>" 
+                                            <?php echo $filters['rank'] == $rank ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($rank); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            
+                            <!-- Service Number Filter -->
+                            <div class="col-md-3 col-sm-6 col-xs-12 form-group">
+                                <label><i class="fa fa-id-card"></i> Service Number</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       name="serviceNo" 
+                                       id="serviceNoFilter"
+                                       placeholder="Enter service number..."
+                                       value="<?php echo htmlspecialchars($filters['serviceNo']); ?>">
+                            </div>
+                            
+                            <!-- Confirm Status Filter -->
+                            <div class="col-md-3 col-sm-6 col-xs-12 form-group">
+                                <label><i class="fa fa-check-circle"></i> Confirm Status</label>
+                                <select class="form-control" name="confirmStatus" id="confirmStatusFilter">
+                                    <option value="">All Status</option>
+                                    <option value="confirmed" <?php echo $filters['confirmStatus'] == 'confirmed' ? 'selected' : ''; ?>>Confirmed Only</option>
+                                    <option value="not_confirmed" <?php echo $filters['confirmStatus'] == 'not_confirmed' ? 'selected' : ''; ?>>Not Confirmed Only</option>
+                                </select>
+                            </div>
                         </div>
                         
-                        <!-- Rank Filter -->
-                        <div class="filter-group">
-                            <label class="filter-label">
-                                <i class="fas fa-user-tie"></i> Rank
-                            </label>
-                            <select class="filter-select" name="rank" id="rankFilter">
-                                <option value="">All Ranks</option>
-                                <?php foreach ($ranks as $rank): ?>
-                                    <option value="<?php echo htmlspecialchars($rank); ?>" 
-                                        <?php echo $filters['rank'] == $rank ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($rank); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        
-                        <!-- Service Number Filter -->
-                        <div class="filter-group">
-                            <label class="filter-label">
-                                <i class="fas fa-id-card"></i> Service Number
-                            </label>
-                            <input type="text" 
-                                   class="filter-input" 
-                                   name="serviceNo" 
-                                   id="serviceNoFilter"
-                                   placeholder="Enter service number (partial match)..."
-                                   value="<?php echo htmlspecialchars($filters['serviceNo']); ?>">
-                        </div>
-                        
-                        <!-- Confirm Status Filter -->
-                        <div class="filter-group">
-                            <label class="filter-label">
-                                <i class="fas fa-check-circle"></i> Confirm Status
-                            </label>
-                            <select class="filter-select" name="confirmStatus" id="confirmStatusFilter">
-                                <option value="">All Status</option>
-                                <option value="confirmed" <?php echo $filters['confirmStatus'] == 'confirmed' ? 'selected' : ''; ?>>Confirmed Only</option>
-                                <option value="not_confirmed" <?php echo $filters['confirmStatus'] == 'not_confirmed' ? 'selected' : ''; ?>>Not Confirmed Only</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <!-- Active Filters Display -->
-                    <?php if (!empty($filters['posting']) || !empty($filters['rank']) || !empty($filters['serviceNo']) || !empty($filters['confirmStatus'])): ?>
-                    <div class="active-filters">
-                        <?php if (!empty($filters['posting'])): ?>
-                        <div class="filter-badge">
-                            <i class="fas fa-map-marker-alt"></i> 
-                            Posting: <?php echo htmlspecialchars($filters['posting']); ?>
-                            <i class="fas fa-times" onclick="removeFilter('posting')"></i>
+                        <!-- Active Filters Display -->
+                        <?php if (!empty($filters['posting']) || !empty($filters['rank']) || !empty($filters['serviceNo']) || !empty($filters['confirmStatus'])): ?>
+                        <div class="row" style="margin-bottom: 10px;">
+                            <div class="col-md-12">
+                                <?php if (!empty($filters['posting'])): ?>
+                                <span class="label label-success" style="font-size: 11px; padding: 4px 8px; margin-right: 4px;">
+                                    Posting: <?php echo htmlspecialchars($filters['posting']); ?> <i class="fa fa-times" onclick="removeFilter('posting')" style="cursor:pointer;"></i>
+                                </span>
+                                <?php endif; ?>
+                                
+                                <?php if (!empty($filters['rank'])): ?>
+                                <span class="label label-success" style="font-size: 11px; padding: 4px 8px; margin-right: 4px;">
+                                    Rank: <?php echo htmlspecialchars($filters['rank']); ?> <i class="fa fa-times" onclick="removeFilter('rank')" style="cursor:pointer;"></i>
+                                </span>
+                                <?php endif; ?>
+                                
+                                <?php if (!empty($filters['serviceNo'])): ?>
+                                <span class="label label-info" style="font-size: 11px; padding: 4px 8px; margin-right: 4px;">
+                                    Service No: <?php echo htmlspecialchars($filters['serviceNo']); ?> <i class="fa fa-times" onclick="removeFilter('serviceNo')" style="cursor:pointer;"></i>
+                                </span>
+                                <?php endif; ?>
+                                
+                                <?php if (!empty($filters['confirmStatus'])): ?>
+                                <span class="label <?php echo $filters['confirmStatus'] == 'confirmed' ? 'label-success' : 'label-danger'; ?>" style="font-size: 11px; padding: 4px 8px; margin-right: 4px;">
+                                    Status: <?php echo $filters['confirmStatus'] == 'confirmed' ? 'Confirmed Only' : 'Not Confirmed Only'; ?> <i class="fa fa-times" onclick="removeFilter('confirmStatus')" style="cursor:pointer;"></i>
+                                </span>
+                                <?php endif; ?>
+                            </div>
                         </div>
                         <?php endif; ?>
                         
-                        <?php if (!empty($filters['rank'])): ?>
-                        <div class="filter-badge">
-                            <i class="fas fa-user-tie"></i> 
-                            Rank: <?php echo htmlspecialchars($filters['rank']); ?>
-                            <i class="fas fa-times" onclick="removeFilter('rank')"></i>
+                        <div class="row">
+                            <div class="col-md-12 text-right">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fa fa-filter"></i> Apply Filters
+                                </button>
+                                <button type="button" class="btn btn-default" onclick="resetFilters()">
+                                    <i class="fa fa-refresh"></i> Reset Filters
+                                </button>
+                                <a href="?" class="btn btn-warning">
+                                    <i class="fa fa-times-circle"></i> Clear All
+                                </a>
+                            </div>
                         </div>
-                        <?php endif; ?>
-                        
-                        <?php if (!empty($filters['serviceNo'])): ?>
-                        <div class="filter-badge">
-                            <i class="fas fa-id-card"></i> 
-                            Service No: <?php echo htmlspecialchars($filters['serviceNo']); ?>
-                            <i class="fas fa-times" onclick="removeFilter('serviceNo')"></i>
-                        </div>
-                        <?php endif; ?>
-                        
-                        <?php if (!empty($filters['confirmStatus'])): ?>
-                        <div class="filter-badge <?php echo $filters['confirmStatus'] == 'confirmed' ? 'confirm-badge' : 'not-confirm-badge'; ?>">
-                            <i class="fas fa-<?php echo $filters['confirmStatus'] == 'confirmed' ? 'check-circle' : 'times-circle'; ?>"></i> 
-                            Status: <?php echo $filters['confirmStatus'] == 'confirmed' ? 'Confirmed Only' : 'Not Confirmed Only'; ?>
-                            <i class="fas fa-times" onclick="removeFilter('confirmStatus')"></i>
-                        </div>
-                        <?php endif; ?>
-                    </div>
-                    <?php endif; ?>
-                    
-                    <div class="filter-actions">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-filter"></i> Apply Filters
-                        </button>
-                        <button type="button" class="btn btn-secondary" onclick="resetFilters()">
-                            <i class="fas fa-redo"></i> Reset Filters
-                        </button>
-                        <a href="?" class="btn btn-warning" style="text-decoration: none;">
-                            <i class="fas fa-times-circle"></i> Clear All
-                        </a>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
             
-            <!-- Results Section -->
-            <div class="results-section">
-                <div class="results-header">
-                    <h4 class="results-title">
-                        <i class="fas fa-list"></i> Filtered Results
-                    </h4>
-                    <?php if ($numb > 0): ?>
-                    <div class="results-info">
-                        <i class="fas fa-chart-bar"></i>
-                        Showing <strong><?php echo $numb; ?></strong> of <strong><?php echo number_format($total_records); ?></strong> records
-                    </div>
-                    <?php endif; ?>
+            <!-- Results Section (Standard Gentelella Theme Styling) -->
+            <div class="x_panel">
+                <div class="x_title">
+                    <h2><i class="fa fa-list"></i> Filtered Results <small>Showing <?php echo $numb; ?> of <?php echo number_format($total_records); ?> records</small></h2>
+                    <div class="clearfix"></div>
                 </div>
+                <div class="x_content">
                 
                 <?php if ($numb > 0): ?>
                     <div class="table-responsive">
