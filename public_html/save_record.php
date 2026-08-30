@@ -112,25 +112,17 @@ try {
     // Start transaction
     mysqli_begin_transaction($conn);
     
-    // Personal Info Insertion
-    $insertion = "INSERT INTO tbl_emppersonal VALUES(
-        '$NISNo',
-        '$surname',                                    
-        '$firstName', 
-        '$middleName',
-        '$dob',
-        '$maritalStatus',
-        '$maidenName',                                    
-        '$gender',
-        '$state',
-        '$town','$lga', 
-        '$bloodType',
-        '$genotype',
-        '$email', 
-        '$phone',
-        '','', '', '$user_id',
-        '$date_of_entry'
+    // Personal Info Insertion (named columns for safety and card_status tracking)
+    $insertion = "INSERT INTO tbl_emppersonal (
+        serviceNo, surname, firstName, middleName, dob, marital_status, maiden_name,
+        gender, state_of_origin, town, lga, bloodType, genotype, email, phone,
+        user_id, date_of_entry, card_status
+    ) VALUES (
+        '$NISNo', '$surname', '$firstName', '$middleName', '$dob', '$maritalStatus', '$maidenName',
+        '$gender', '$state', '$town', '$lga', '$bloodType', '$genotype', '$email', '$phone',
+        '$user_id', '$date_of_entry', 'Pending Printing'
     )";
+
 
     // Execute all queries
     $queries = [];

@@ -39,10 +39,11 @@ function logPrintedCard($conn, $serviceNo, $print_method = 'single', $batch_id =
         }
         
         // Using currentRank column (no reserved words issue)
+        // Insert print record with card_status = 'Printed'
         $insert_sql = "INSERT INTO tbl_printed_cards 
                        (serviceNo, surname, firstName, middleName, currentRank, printed_by, printed_by_role, 
-                        print_date, print_method, batch_id, ip_address, user_agent) 
-                       VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?)";
+                        print_date, print_method, batch_id, ip_address, user_agent, card_status) 
+                       VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, 'Printed')";
         
         $insert_stmt = mysqli_prepare($conn, $insert_sql);
         if (!$insert_stmt) {
@@ -59,7 +60,19 @@ function logPrintedCard($conn, $serviceNo, $print_method = 'single', $batch_id =
         
         $result = mysqli_stmt_execute($insert_stmt);
         
-        if (!$result) {
+        if ($result) {
+            // Also update tbl_emppersonal card_status to 'Printed'
+            $u_stmt = mysqli_prepare($conn, "UPDATE tbl_emppersonal SET card_status = 'Printed' WHERE serviceNo = ?");
+            if ($u_stmt) {
+                mysqli_stmt_bind_param($u_stmt, "s", $serviceNo);
+                mysqli_stmt_execute($u_stmt);
+                mysqli_stmt_close($u_stmt);
+            }
+            // Record audit activity
+            if (function_exists('log_activity')) {
+                log_activity($conn, 'CARD_PRINTED', "ID Card printed for Service No: $serviceNo (Method: $print_method)");
+            }
+        } else {
             error_log("Insert execute failed: " . mysqli_stmt_error($insert_stmt));
         }
         

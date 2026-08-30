@@ -55,6 +55,21 @@ if ($check_audit_table && mysqli_num_rows($check_audit_table) == 0) {
     mysqli_query($conn, $create_audit_table_sql);
 }
 
+// Self-healing: ensure card_status column exists in tbl_emppersonal and tbl_printed_cards
+$check_card_status_emp = mysqli_query($conn, "SHOW COLUMNS FROM tbl_emppersonal LIKE 'card_status'");
+if ($check_card_status_emp && mysqli_num_rows($check_card_status_emp) == 0) {
+    mysqli_query($conn, "ALTER TABLE tbl_emppersonal ADD card_status VARCHAR(50) NOT NULL DEFAULT 'Pending Printing'");
+}
+
+$check_card_status_print = mysqli_query($conn, "SHOW TABLES LIKE 'tbl_printed_cards'");
+if ($check_card_status_print && mysqli_num_rows($check_card_status_print) > 0) {
+    $check_cs = mysqli_query($conn, "SHOW COLUMNS FROM tbl_printed_cards LIKE 'card_status'");
+    if ($check_cs && mysqli_num_rows($check_cs) == 0) {
+        mysqli_query($conn, "ALTER TABLE tbl_printed_cards ADD card_status VARCHAR(50) NOT NULL DEFAULT 'Printed'");
+    }
+}
+
+
 // Global enforcement: a user flagged for a mandatory password change is
 // redirected to changePassword on every request until they comply, no
 // matter which page they try to load. Guarded on an active session so

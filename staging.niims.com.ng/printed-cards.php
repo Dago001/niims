@@ -27,17 +27,67 @@ $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $records_per_page = 50;
 $offset = ($page - 1) * $records_per_page;
 
-// Date range filter
+// Handle POST card status update (Single or Bulk)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_type']) && $_POST['action_type'] === 'update_card_status') {
+    $allowed_roles = ['SuperAdmin', 'Admin', 'Supervisor'];
+    if (isset($_SESSION['role']) && in_array($_SESSION['role'], $allowed_roles)) {
+        $new_status = trim($_POST['new_status'] ?? '');
+        $allowed_statuses = ['Pending Printing', 'Printed', 'Dispatched', 'Issued', 'Re-issue Requested'];
+        
+        if (in_array($new_status, $allowed_statuses, true)) {
+            $service_nos = [];
+            if (!empty($_POST['serviceNo'])) {
+                $service_nos[] = trim($_POST['serviceNo']);
+            } elseif (!empty($_POST['selected_services']) && is_array($_POST['selected_services'])) {
+                foreach ($_POST['selected_services'] as $s) {
+                    $service_nos[] = trim($s);
+                }
+            }
+            
+            if (!empty($service_nos)) {
+                $updated_count = 0;
+                foreach ($service_nos as $sNo) {
+                    $sNo_clean = mysqli_real_escape_string($conn, $sNo);
+                    $ns_clean = mysqli_real_escape_string($conn, $new_status);
+                    
+                    // Update tbl_emppersonal
+                    mysqli_query($conn, "UPDATE tbl_emppersonal SET card_status = '$ns_clean' WHERE serviceNo = '$sNo_clean'");
+                    // Update tbl_printed_cards
+                    mysqli_query($conn, "UPDATE tbl_printed_cards SET card_status = '$ns_clean' WHERE serviceNo = '$sNo_clean'");
+                    
+                    if (function_exists('log_activity')) {
+                        log_activity($conn, 'CARD_STATUS_UPDATE', "Card status for Service No: $sNo updated to: $new_status");
+                    }
+                    $updated_count++;
+                }
+                $_SESSION['status_update_msg'] = "Successfully updated card status to '$new_status' for $updated_count record(s).";
+            }
+        }
+    }
+    header("Location: printed-cards");
+    exit();
+}
+
+// Date range & status filter
 $date_from = isset($_GET['date_from']) ? trim($_GET['date_from']) : '';
 $date_to = isset($_GET['date_to']) ? trim($_GET['date_to']) : '';
 $print_method = isset($_GET['print_method']) ? trim($_GET['print_method']) : '';
 $rank_filter = isset($_GET['rank_filter']) ? trim($_GET['rank_filter']) : '';
+$status_filter = isset($_GET['status_filter']) ? trim($_GET['status_filter']) : '';
 
 // Search functionality
 $search_query = isset($_GET['search']) ? trim($_GET['search']) : '';
 $where_conditions = [];
 $where_params = [];
 $param_types = '';
+
+if (!empty($status_filter)) {
+    $where_conditions[] = "(pc.card_status = ? OR (pc.card_status IS NULL AND ? = 'Printed'))";
+    $where_params[] = $status_filter;
+    $where_params[] = $status_filter;
+    $param_types .= 'ss';
+}
+
 
 if (!empty($search_query)) {
     $where_conditions[] = "(pc.serviceNo LIKE ? OR 
@@ -843,6 +893,20 @@ $ranks_result = mysqli_query($conn, $ranks_sql);
                         
                         <div class="filter-group">
                             <label class="filter-label">
+                                <i class="fas fa-id-card"></i> Card Status
+                            </label>
+                            <select class="filter-select" name="status_filter">
+                                <option value="">All Statuses</option>
+                                <option value="Pending Printing" <?php echo $status_filter == 'Pending Printing' ? 'selected' : ''; ?>>Pending Printing</option>
+                                <option value="Printed" <?php echo $status_filter == 'Printed' ? 'selected' : ''; ?>>Printed</option>
+                                <option value="Dispatched" <?php echo $status_filter == 'Dispatched' ? 'selected' : ''; ?>>Dispatched</option>
+                                <option value="Issued" <?php echo $status_filter == 'Issued' ? 'selected' : ''; ?>>Issued to Staff</option>
+                                <option value="Re-issue Requested" <?php echo $status_filter == 'Re-issue Requested' ? 'selected' : ''; ?>>Re-issue Requested</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label class="filter-label">
                                 <i class="fas fa-star"></i> Rank
                             </label>
                             <select class="filter-select" name="rank_filter">
@@ -863,12 +927,7 @@ $ranks_result = mysqli_query($conn, $ranks_sql);
                         </div>
                     </div>
                     
-                    
-                    
-              
-                    
                     <div class="filter-actions">
-                        
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-filter"></i> Apply Filters
                         </button>
@@ -897,11 +956,36 @@ $ranks_result = mysqli_query($conn, $ranks_sql);
             
             <!-- Results Section -->
             <div class="results-section">
+                <?php if (!empty($_SESSION['status_update_msg'])): ?>
+                    <div class="alert alert-success alert-dismissible fade in" role="alert" style="margin-bottom: 15px;">
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>
+                        <i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($_SESSION['status_update_msg']); unset($_SESSION['status_update_msg']); ?>
+                    </div>
+                <?php endif; ?>
+
+                <!-- Bulk Status Action Bar -->
+                <div id="bulk_action_bar" style="margin-bottom: 15px; padding: 10px 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; display: none; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                    <span style="font-size: 13px; font-weight: 600; color: #334155;"><span id="selected_count">0</span> cards selected</span>
+                    <form method="POST" action="" id="bulk_status_form" style="display: flex; gap: 10px; align-items: center; margin: 0; flex-wrap: wrap;">
+                        <input type="hidden" name="action_type" value="update_card_status">
+                        <div id="bulk_hidden_inputs"></div>
+                        <select name="new_status" class="filter-select" style="padding: 4px 8px; font-size: 12px; height: 32px;" required>
+                            <option value="">-- Change Status for Selected --</option>
+                            <option value="Dispatched">Mark as Dispatched</option>
+                            <option value="Issued">Mark as Issued to Staff</option>
+                            <option value="Re-issue Requested">Request Re-issue (Lost/Damaged)</option>
+                            <option value="Printed">Mark as Printed</option>
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-success" style="padding: 4px 12px; font-size: 12px;"><i class="fas fa-check-circle"></i> Apply to Selected</button>
+                    </form>
+                </div>
+
                 <?php if ($numb > 0): ?>
                     <div class="table-responsive">
                         <table>
                             <thead>
                                 <tr>
+                                    <th style="width: 30px;"><input type="checkbox" id="check_all_records"></th>
                                     <th>S/N</th>
                                     <th>Service No.</th>
                                     <th>Name</th>
@@ -909,6 +993,7 @@ $ranks_result = mysqli_query($conn, $ranks_sql);
                                     <th>Printed By</th>
                                     <th>Print Date</th>
                                     <th>Method</th>
+                                    <th>Card Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -916,12 +1001,14 @@ $ranks_result = mysqli_query($conn, $ranks_sql);
                                 <?php 
                                 $counter = ($page - 1) * $records_per_page + 1;
                                 while ($row = mysqli_fetch_assoc($retrieve)):
-                                    $serviceNo = htmlspecialchars($row['serviceNo']);
+                                    $rawServiceNo = $row['serviceNo'];
+                                    $serviceNo = htmlspecialchars($rawServiceNo);
                                     $surname = htmlspecialchars($row['surname']);
                                     $firstName = htmlspecialchars($row['firstName']);
                                     $middleName = htmlspecialchars($row['middleName']);
                                     $currentRank = htmlspecialchars($row['currentRank']);
                                     $printedBy = htmlspecialchars($row['printed_by']);
+                                    $cardStatus = !empty($row['card_status']) ? $row['card_status'] : 'Printed';
                                     
                                     if (!empty($search_query)) {
                                         $searchPattern = '/(' . preg_quote($search_query, '/') . ')/i';
@@ -937,8 +1024,17 @@ $ranks_result = mysqli_query($conn, $ranks_sql);
                                     if (strlen($fullName) > 25) {
                                         $fullName = substr($fullName, 0, 22) . '...';
                                     }
+
+                                    // Badge color mapping
+                                    $status_badge_class = 'label-info';
+                                    if ($cardStatus === 'Pending Printing') $status_badge_class = 'label-warning';
+                                    elseif ($cardStatus === 'Printed') $status_badge_class = 'label-info';
+                                    elseif ($cardStatus === 'Dispatched') $status_badge_class = 'label-primary';
+                                    elseif ($cardStatus === 'Issued') $status_badge_class = 'label-success';
+                                    elseif ($cardStatus === 'Re-issue Requested') $status_badge_class = 'label-danger';
                                 ?>
                                 <tr>
+                                    <td><input type="checkbox" class="record_checkbox" value="<?php echo htmlspecialchars($rawServiceNo); ?>"></td>
                                     <td><?php echo $counter++; ?></td>
                                     <td><span class="service-no"><?php echo $serviceNo; ?></span></td>
                                     <td><?php echo $fullName; ?></td>
@@ -956,17 +1052,35 @@ $ranks_result = mysqli_query($conn, $ranks_sql);
                                         </span>
                                     </td>
                                     <td>
-                                        <a href="card?id=<?php echo urlencode($row['serviceNo']); ?>" 
+                                        <span class="label <?php echo $status_badge_class; ?>" style="font-size: 11px; padding: 4px 8px; border-radius: 4px; display: inline-block;">
+                                            <?php echo htmlspecialchars($cardStatus); ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="card?id=<?php echo urlencode($rawServiceNo); ?>" 
                                            class="action-btn" 
                                            target="_blank"
                                            title="View Card">
                                             <i class="fas fa-id-card"></i>
                                         </a>
                                         <button class="action-btn" 
-                                                onclick="printAgain('<?php echo $row['serviceNo']; ?>')"
+                                                onclick="printAgain('<?php echo addslashes($rawServiceNo); ?>')"
                                                 title="Print Again">
                                             <i class="fas fa-print"></i>
                                         </button>
+
+                                        <!-- Quick Status Change Form -->
+                                        <form method="POST" action="" style="display: inline-block; margin-left: 2px;">
+                                            <input type="hidden" name="action_type" value="update_card_status">
+                                            <input type="hidden" name="serviceNo" value="<?php echo htmlspecialchars($rawServiceNo); ?>">
+                                            <select name="new_status" onchange="if(confirm('Change card status for Service No <?php echo addslashes($rawServiceNo); ?> to ' + this.value + '?')) this.form.submit(); else this.selectedIndex=0;" class="action-btn" style="padding: 2px 4px; font-size: 10px; border: 1px solid #ccc; cursor: pointer;" title="Update Card Lifecycle Status">
+                                                <option value="">Status ▾</option>
+                                                <option value="Dispatched">Dispatched</option>
+                                                <option value="Issued">Issued</option>
+                                                <option value="Re-issue Requested">Re-issue</option>
+                                                <option value="Printed">Printed</option>
+                                            </select>
+                                        </form>
                                     </td>
                                 </tr>
                                 <?php endwhile; ?>
@@ -1190,6 +1304,46 @@ $ranks_result = mysqli_query($conn, $ranks_sql);
             }
         `;
         document.head.appendChild(style);
+
+        // Bulk checkbox selection logic
+        const checkAll = document.getElementById('check_all_records');
+        const checkboxes = document.querySelectorAll('.record_checkbox');
+        const bulkBar = document.getElementById('bulk_action_bar');
+        const selectedCount = document.getElementById('selected_count');
+        const bulkHiddenInputs = document.getElementById('bulk_hidden_inputs');
+
+        function updateBulkBar() {
+            const checked = document.querySelectorAll('.record_checkbox:checked');
+            if (checked.length > 0) {
+                bulkBar.style.display = 'flex';
+                selectedCount.textContent = checked.length;
+                bulkHiddenInputs.innerHTML = '';
+                checked.forEach(cb => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'selected_services[]';
+                    input.value = cb.value;
+                    bulkHiddenInputs.appendChild(input);
+                });
+            } else {
+                bulkBar.style.display = 'none';
+                bulkHiddenInputs.innerHTML = '';
+            }
+        }
+
+        if (checkAll) {
+            checkAll.addEventListener('change', function() {
+                checkboxes.forEach(cb => cb.checked = checkAll.checked);
+                updateBulkBar();
+            });
+        }
+
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', function() {
+                if (!cb.checked && checkAll) checkAll.checked = false;
+                updateBulkBar();
+            });
+        });
     </script>
     
     <?php 
