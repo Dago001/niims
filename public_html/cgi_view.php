@@ -9,16 +9,27 @@ if (!isset($_SESSION['username'])) {
 require_once('db/db.php');
 require_once('functions/posting_helper.php');
 
-if ($_SESSION['role'] == "Admin") {
-    include 'sidebar-admin.php';
-}
-if ($_SESSION['role'] == "SuperAdmin") {
+// Robust case-insensitive sidebar inclusion with fallback for Linux production environments
+$user_role_clean = strtolower(trim($_SESSION['role'] ?? ''));
+
+if ($user_role_clean === 'superadmin' || $user_role_clean === 'super_admin' || $user_role_clean === 'super admin') {
     include 'sidebar-superadmin.php';
+} elseif ($user_role_clean === 'admin') {
+    include 'sidebar-admin.php';
+} elseif ($user_role_clean === 'supervisor') {
+    include 'sidebar-supervisor.php';
+} elseif ($user_role_clean === 'dataentry' || $user_role_clean === 'data_entry' || $user_role_clean === 'data entry') {
+    include 'sidebar-dataentry.php';
+} elseif ($user_role_clean === 'report' || $user_role_clean === 'view') {
+    include 'sidebar-view.php';
+} elseif ($user_role_clean === 'cgi') {
+    include 'sidebar-cgi.php';
+} elseif (file_exists('sidebar-admin.php')) {
+    include 'sidebar-admin.php';
+} else {
+    include 'sidebar.php';
 }
 
-if ($_SESSION['role'] == "CGI") {
-    include 'sidebar-cgi.php';
-}
 
 include 'menu-footer-buttons.php';
 include 'top-navigation.php';
