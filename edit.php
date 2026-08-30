@@ -6,15 +6,15 @@ if (!isset($_SESSION['username'])) {
     die();
 }
 
+// Only SuperAdmin can edit user accounts
+if ($_SESSION['role'] !== 'SuperAdmin') {
+    header("Location: mainpage");
+    exit();
+}
+
 require_once ('db/db.php');
 
 // Include appropriate sidebar based on role
-if ($_SESSION['role'] == "Admin") {
-    include 'sidebar-admin.php';
-}
-if ($_SESSION['role'] == "Supervisor") {
-    include 'sidebar-supervisor.php';
-}
 if ($_SESSION['role'] == "SuperAdmin") {
     include 'sidebar-superadmin.php';
 }

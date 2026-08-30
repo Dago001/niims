@@ -7,10 +7,11 @@ if (!isset($_SESSION['username'])) {
     die();
 }
 
-// Check if user has permission to create users
-$allowed_roles = ['Admin', 'SuperAdmin', 'Supervisor'];
+// Check if user has permission to create users — SuperAdmin only
+$allowed_roles = ['SuperAdmin'];
 if (!in_array($_SESSION['role'], $allowed_roles)) {
-    die("Access Denied. You are not authorized to access this area.");
+    header("Location: mainpage");
+    exit();
 }
 
 require_once ('db/db.php');

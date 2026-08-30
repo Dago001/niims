@@ -120,23 +120,15 @@
                       
                     </ul>
                   </li>
+
+               
                   <li><a><i class="fa fa-laptop"></i> Card Management <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
-
                       <li><a href="print-tables">Print Card</a></li>
                       <li><a href="bulk_print">Bulk Print</a></li>
                       <li><a href="printed-cards">Print History</a></li>
                     </ul>
                   </li>
-                  <li><a><i class="fa fa-user"></i> User Management <span class="fa fa-chevron-down"></span></a>
-                    <ul class="nav child_menu">
-
-                      <li><a href="createuser">Create User</a></li>
-                      
-                    </ul>
-                  </li>
-              
-               
                   <li><a><i class="fa fa-bar-chart-o"></i> Reports <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
                         <li><a href="nominal_roll">Nominal Roll</a></li>
