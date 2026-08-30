@@ -1203,20 +1203,21 @@ $total_filtered_records = $all_retrieve ? mysqli_num_rows($all_retrieve) : 0;
                                 mysqli_data_seek($retrieve, 0);
                                 $index = 0;
                                 while ($ret = mysqli_fetch_assoc($retrieve)): 
-                                    $rawServiceNo = $ret['serviceNo'];
+                                    $rawServiceNo = $ret['serviceNo'] ?? '';
                                     $serviceNo = htmlspecialchars($rawServiceNo);
-                                    $surname = htmlspecialchars($ret['surname']);
-                                    $firstName = htmlspecialchars($ret['firstName']);
-                                    $middleName = htmlspecialchars($ret['middleName']);
-                                    $rank = htmlspecialchars($ret['currentRank']);
+                                    $surname = htmlspecialchars($ret['surname'] ?? '');
+                                    $firstName = htmlspecialchars($ret['firstName'] ?? '');
+                                    $middleName = htmlspecialchars($ret['middleName'] ?? '');
+                                    $rank = htmlspecialchars($ret['currentRank'] ?? '');
                                     $posting = htmlspecialchars(formatPresentPosting(
-                                        $ret['presentPosting'],
+                                        $ret['presentPosting'] ?? '',
                                         $ret['directorate'] ?? '',
                                         $ret['unit'] ?? '',
                                         $ret['posting_other'] ?? ''
                                     ));
-                                    $bloodType = htmlspecialchars($ret['bloodType']);
-                                    $confirmedDetails = htmlspecialchars($ret['confirmed_details']);
+                                    $bloodType = htmlspecialchars($ret['bloodType'] ?? '');
+                                    $confirmedDetails = htmlspecialchars($ret['confirmed_details'] ?? '');
+
                                     
                                     // ============ UPDATED PHOTO FETCHING SECTION ============
                                     // Check for photo in multiple formats
