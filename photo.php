@@ -52,8 +52,15 @@ if ($_SESSION['role'] == "DataEntry")
             <div class="clearfix"></div>
 			<!-- Content starts here -->
       <?php 
-        //$id = $_GET['id']; 
+        $id = isset($_GET['id']) ? preg_replace('/[^a-zA-Z0-9_\-]/', '', $_GET['id']) : '';
+        if (empty($id)) {
+            echo '<div class="alert alert-danger">Error: Invalid Service Number. Please go back and try again.</div>';
+            echo '</div></div>';
+            include 'footer_tables.php';
+            exit;
+        }
       ?>
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 	  <style>
         #canvas {
             border: 1px solid black;
@@ -61,67 +68,89 @@ if ($_SESSION['role'] == "DataEntry")
     </style>
     
     <form id="image-form" action="image" method="post" enctype="multipart/form-data">
-   
-		<input type="file" name="file-upload" id="file-upload" accept="images/*" >
+        <input type="hidden" name="serviceNo" value="<?php echo htmlspecialchars($id); ?>">
+ 		<input type="file" name="file-upload" id="file-upload" accept="image/png, image/jpeg, image/jpg" >
         <br><br>
         <canvas id="canvas" width="300" height="290"></canvas>
         <br><br>
-        <button id="save-button">Save Image</button>
+        <button id="save-button" type="submit" disabled>Save Image</button>
     </form>
 		<script>
 					// Get the file upload button and the canvas element
 					const fileUpload = document.getElementById('file-upload');
 					const canvas = document.getElementById('canvas');
 					const ctx = canvas.getContext('2d');
-          const saveButton = document.getElementById('save-button');
-
-
+					const saveButton = document.getElementById('save-button');
+					const targetId = <?php echo json_encode($id); ?>;
 
 					// Add an event listener to the file upload button
 					fileUpload.addEventListener('change', (e) => 
-          {
-            // Get the selected file
-            const file = e.target.files[0];
+					{
+						// Get the selected file
+						const file = e.target.files[0];
+						if (!file) {
+							saveButton.disabled = true;
+							return;
+						}
 
-            // Create a new FileReader object
-            const reader = new FileReader();
+						const filename = file.name;
+						const dotIndex = filename.lastIndexOf('.');
+						if (dotIndex === -1) {
+							alertAndReset("Invalid file format. Only JPG, JPEG, and PNG files named '" + targetId + "' are allowed.");
+							return;
+						}
 
-            // Add an event listener to the FileReader object
-              reader.addEventListener('load', () => 
-              {
-                // Create a new Image object
-                const img = new Image();
+						const baseName = filename.substring(0, dotIndex);
+						const extension = filename.substring(dotIndex + 1).toLowerCase();
 
-                // Set the src attribute of the Image object to the result of the FileReader object
-                img.src = reader.result;
+						// Verify name matches targetId exactly
+						if (baseName !== targetId) {
+							alertAndReset("Filename mismatch! You are uploading a photo for Service No '" + targetId + "'. The file must be named exactly '" + targetId + ".jpg', '" + targetId + ".jpeg', or '" + targetId + ".png'. Files named '" + filename + "' are not allowed.");
+							return;
+						}
 
-                // Add an event listener to the Image object
-                img.addEventListener('load', () => {
-                // Draw the image on the canvas
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                });
-              });
+						// Verify extension is png, jpg, or jpeg
+						if (extension !== 'png' && extension !== 'jpg' && extension !== 'jpeg') {
+							alertAndReset("Invalid file extension! Only .jpg, .jpeg, and .png files are allowed.");
+							return;
+						}
 
-              // Read the selected file as a data URL
-              reader.readAsDataURL(file);
+						saveButton.disabled = false;
+
+						// Create a new FileReader object
+						const reader = new FileReader();
+
+						// Add an event listener to the FileReader object
+						reader.addEventListener('load', () => 
+						{
+							// Create a new Image object
+							const img = new Image();
+
+							// Set the src attribute of the Image object to the result of the FileReader object
+							img.src = reader.result;
+
+							// Add an event listener to the Image object
+							img.addEventListener('load', () => {
+								// Draw the image on the canvas
+								ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+							});
+						});
+
+						// Read the selected file as a data URL
+						reader.readAsDataURL(file);
 					});
 
-          //save button
-          /*saveButton.addEventListener('click', (e) => 
-          {
-              console.log('Hello');
-            const file = fileUpload.files[0];
-            const formData = new FormData();
-            formData.append('file', file);
-
-            fetch('image.php', {
-              method: 'POST',
-              body: formData
-            })
-            .then(response => response.text())
-            .then(message => console.log(message))
-            .catch(error => console.error(error));
-          });*/
+					function alertAndReset(message) {
+						Swal.fire({
+							icon: 'error',
+							title: 'Upload Rejected',
+							text: message,
+							confirmButtonColor: '#26B99A'
+						});
+						fileUpload.value = '';
+						saveButton.disabled = true;
+						ctx.clearRect(0, 0, canvas.width, canvas.height);
+					}
 
 				</script>
 

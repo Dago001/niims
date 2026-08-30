@@ -33,13 +33,31 @@ if (!isset($_FILES["file-upload"]) || $_FILES["file-upload"]["error"] != UPLOAD_
 // upload directory via "../" or similar in the filename.
 $serviceNo = preg_replace('/[^a-zA-Z0-9_\-]/', '', $_POST['serviceNo'] ?? '');
 
-// Use service number as filename to ensure proper override
-$imageFileType = strtolower(pathinfo($_FILES["file-upload"]["name"], PATHINFO_EXTENSION));
-if (!empty($serviceNo)) {
-    $target_file = $target_dir . $serviceNo . "." . $imageFileType;
-} else {
-    $target_file = $target_dir . basename($_FILES["file-upload"]["name"]);
+if (empty($serviceNo)) {
+    $_SESSION['upload_error'] = "Upload Rejected: Invalid Service Number.";
+    header("Location: photocapture");
+    exit();
 }
+
+$uploadedBaseName = pathinfo($_FILES["file-upload"]["name"], PATHINFO_FILENAME);
+$imageFileType = strtolower(pathinfo($_FILES["file-upload"]["name"], PATHINFO_EXTENSION));
+
+// 1. Verify that the file basename matches the serviceNo exactly
+if ($uploadedBaseName !== $serviceNo) {
+    $_SESSION['upload_error'] = "Upload Rejected: The file must be named exactly '" . $serviceNo . "' matching the target Service Number (e.g. '" . $serviceNo . ".jpg'). Files named '" . basename($_FILES["file-upload"]["name"]) . "' are rejected.";
+    header("Location: photocapture");
+    exit();
+}
+
+// 2. Verify that the extension is strictly jpg, jpeg, or png
+$allowed_types = array('jpg', 'jpeg', 'png');
+if (!in_array($imageFileType, $allowed_types)) {
+    $_SESSION['upload_error'] = "Upload Rejected: Only JPG, JPEG, and PNG files are allowed.";
+    header("Location: photocapture");
+    exit();
+}
+
+$target_file = $target_dir . $serviceNo . "." . $imageFileType;
 
 // Security checks
 $uploadOk = 1;
