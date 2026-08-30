@@ -1,4 +1,4 @@
-const CACHE_NAME = "niims-cache-v3";
+const CACHE_NAME = "niims-cache-v4";
 
 const STATIC_ASSETS = [
   "build/css/custom.min.css",
@@ -70,22 +70,24 @@ self.addEventListener("fetch", event => {
   );
 
   if (isStaticAsset) {
-    // Cache-First (Cache falling back to Network)
+    // Stale-While-Revalidate: serve the cached copy immediately for speed,
+    // but always kick off a background fetch that refreshes the cache for
+    // next time. Plain Cache-First here meant a stale, even broken, JS/CSS
+    // file could sit in every visitor's cache indefinitely — until the
+    // browser happened to notice sw.js itself had changed — since a normal
+    // reload never rechecks the network once something is cached. This way
+    // a deploy is picked up within one extra load, with no manual cache
+    // version bump and no hard refresh required.
     event.respondWith(
-      caches.match(request).then(cachedResponse => {
-        if (cachedResponse) {
-          return cachedResponse;
-        }
-        return fetch(request).then(networkResponse => {
-          if (networkResponse && networkResponse.status === 200) {
-            const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then(cache => {
-              cache.put(request, responseToCache);
-            });
-          }
-          return networkResponse;
-        }).catch(() => {
-          // Silent catch for network failure of uncached static assets
+      caches.open(CACHE_NAME).then(cache => {
+        return cache.match(request).then(cachedResponse => {
+          const networkFetch = fetch(request).then(networkResponse => {
+            if (networkResponse && networkResponse.status === 200) {
+              cache.put(request, networkResponse.clone());
+            }
+            return networkResponse;
+          }).catch(() => cachedResponse);
+          return cachedResponse || networkFetch;
         });
       })
     );
