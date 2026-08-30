@@ -614,69 +614,48 @@ $retrieve = mysqli_query($conn, $sqluse);
 
       <div class="tab-pane<?php echo $activeTab === 'manage' ? ' active' : ''; ?>" id="tab-manage">
 
-      <!-- Stats Cards Section -->
-      <div class="row" style="margin-bottom: 20px;">
-          <!-- Metric 1: Total Users -->
-          <div class="col-md-3 col-sm-6 col-xs-12">
-              <div class="tile-stats" style="background:#fff; padding:15px; border-radius:8px; border:1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 0; position: relative;">
-                  <div class="icon" style="color: #4f46e5; position: absolute; right: 20px; top: 15px;"><i class="fa fa-users" style="font-size: 24px;"></i></div>
-                  <div class="count" style="font-size: 28px; font-weight: 700; color: #1e293b;"><?php echo mysqli_num_rows($retrieve); ?></div>
-                  <h3 style="font-size: 12px; font-weight: 600; color: #64748b; margin-top: 5px; margin-bottom: 0; text-transform: uppercase; letter-spacing: 0.5px;">Total Users</h3>
-              </div>
+      <!-- Stats Tile Section (Standard NIIMS Theme Styling) -->
+      <?php
+          mysqli_data_seek($retrieve, 0);
+          $total_users_count = mysqli_num_rows($retrieve);
+          $active_count = 0;
+          $inactive_count = 0;
+          $admin_count = 0;
+          while ($r = mysqli_fetch_assoc($retrieve)) {
+              if (($r['is_active'] ?? 1) == 1) {
+                  $active_count++;
+              } else {
+                  $inactive_count++;
+              }
+              $role = $r['user_role'] ?? '';
+              if ($role === 'Admin' || $role === 'SuperAdmin') {
+                  $admin_count++;
+              }
+          }
+      ?>
+      <div class="row tile_count" style="margin-bottom: 20px;">
+          <div class="col-md-3 col-sm-6 col-xs-12 tile_stats_count">
+              <span class="count_top"><i class="fa fa-users"></i> Total Users</span>
+              <div class="count blue" style="font-size: 30px; font-weight: bold;"><?php echo $total_users_count; ?></div>
+              <span class="count_bottom">System User Accounts</span>
           </div>
-          <!-- Metric 2: Active Users -->
-          <div class="col-md-3 col-sm-6 col-xs-12">
-              <div class="tile-stats" style="background:#fff; padding:15px; border-radius:8px; border:1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 0; position: relative;">
-                  <div class="icon" style="color: #10b981; position: absolute; right: 20px; top: 15px;"><i class="fa fa-user-check" style="font-size: 24px;"></i></div>
-                  <div class="count" style="font-size: 28px; font-weight: 700; color: #1e293b;">
-                      <?php
-                          mysqli_data_seek($retrieve, 0);
-                          $active_count = 0;
-                          while ($r = mysqli_fetch_assoc($retrieve)) {
-                              if (($r['is_active'] ?? 1) == 1) $active_count++;
-                          }
-                          echo $active_count;
-                      ?>
-                  </div>
-                  <h3 style="font-size: 12px; font-weight: 600; color: #64748b; margin-top: 5px; margin-bottom: 0; text-transform: uppercase; letter-spacing: 0.5px;">Active Users</h3>
-              </div>
+          <div class="col-md-3 col-sm-6 col-xs-12 tile_stats_count">
+              <span class="count_top"><i class="fa fa-user-check"></i> Active Users</span>
+              <div class="count green" style="font-size: 30px; font-weight: bold;"><?php echo $active_count; ?></div>
+              <span class="count_bottom">Active Login Accounts</span>
           </div>
-          <!-- Metric 3: Inactive Users -->
-          <div class="col-md-3 col-sm-6 col-xs-12">
-              <div class="tile-stats" style="background:#fff; padding:15px; border-radius:8px; border:1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 0; position: relative;">
-                  <div class="icon" style="color: #ef4444; position: absolute; right: 20px; top: 15px;"><i class="fa fa-user-times" style="font-size: 24px;"></i></div>
-                  <div class="count" style="font-size: 28px; font-weight: 700; color: #1e293b;">
-                      <?php
-                          mysqli_data_seek($retrieve, 0);
-                          $inactive_count = 0;
-                          while ($r = mysqli_fetch_assoc($retrieve)) {
-                              if (($r['is_active'] ?? 1) == 0) $inactive_count++;
-                          }
-                          echo $inactive_count;
-                      ?>
-                  </div>
-                  <h3 style="font-size: 12px; font-weight: 600; color: #64748b; margin-top: 5px; margin-bottom: 0; text-transform: uppercase; letter-spacing: 0.5px;">Deactivated</h3>
-              </div>
+          <div class="col-md-3 col-sm-6 col-xs-12 tile_stats_count">
+              <span class="count_top"><i class="fa fa-user-times"></i> Deactivated</span>
+              <div class="count red" style="font-size: 30px; font-weight: bold;"><?php echo $inactive_count; ?></div>
+              <span class="count_bottom">Disabled Login Accounts</span>
           </div>
-          <!-- Metric 4: Admins -->
-          <div class="col-md-3 col-sm-6 col-xs-12">
-              <div class="tile-stats" style="background:#fff; padding:15px; border-radius:8px; border:1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 0; position: relative;">
-                  <div class="icon" style="color: #f59e0b; position: absolute; right: 20px; top: 15px;"><i class="fa fa-shield" style="font-size: 24px;"></i></div>
-                  <div class="count" style="font-size: 28px; font-weight: 700; color: #1e293b;">
-                      <?php
-                          mysqli_data_seek($retrieve, 0);
-                          $admin_count = 0;
-                          while ($r = mysqli_fetch_assoc($retrieve)) {
-                              $role = $r['user_role'] ?? '';
-                              if ($role === 'Admin' || $role === 'SuperAdmin') $admin_count++;
-                          }
-                          echo $admin_count;
-                      ?>
-                  </div>
-                  <h3 style="font-size: 12px; font-weight: 600; color: #64748b; margin-top: 5px; margin-bottom: 0; text-transform: uppercase; letter-spacing: 0.5px;">System Admins</h3>
-              </div>
+          <div class="col-md-3 col-sm-6 col-xs-12 tile_stats_count">
+              <span class="count_top"><i class="fa fa-shield"></i> System Admins</span>
+              <div class="count yellow" style="font-size: 30px; font-weight: bold;"><?php echo $admin_count; ?></div>
+              <span class="count_bottom">Administrative Roles</span>
           </div>
       </div>
+
 
       <div class="row">
           <div class="col-md-12">
