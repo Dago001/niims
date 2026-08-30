@@ -116,7 +116,7 @@
                     <ul class="nav child_menu">
                       <li><a href="update_rank">Update Rank</a></li>
                       <li><a href="enrolment-update">Update Staff Record</a></li>
-                      <li><a href="https://niims.com.ng/nisposting/login.php" target="_blank">Posting Order</a></li>
+                      <li><a href="https://niims.immigration.gov.ng/nisposting/login.php" target="_blank">Posting Order</a></li>
                       
                     </ul>
                   </li>

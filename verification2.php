@@ -600,15 +600,15 @@ if (strpos($_SERVER['HTTP_ACCEPT_ENCODING'] ?? '', 'gzip') !== false) {
     
     <meta property="og:title" content="NIS Employee Verification System">
     <meta property="og:description" content="Nigeria Immigration Service - Official employee verification portal">
-    <meta property="og:image" content="https://niims.com.ng/images/favicon.ico">
-    <meta property="og:url" content="https://niims.com.ng/verification">
+    <meta property="og:image" content="https://niims.immigration.gov.ng/images/favicon.ico">
+    <meta property="og:url" content="https://niims.immigration.gov.ng/verification">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Nigeria Immigration Service">
     
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="NIS Employee Verification System">
     <meta name="twitter:description" content="Nigeria Immigration Service - Official employee verification portal">
-    <meta name="twitter:image" content="https://niims.com.ng/images/favicon.ico">
+    <meta name="twitter:image" content="https://niims.immigration.gov.ng/images/favicon.ico">
     
     <meta name="description" content="Nigeria Immigration Service - Employee Verification and Identification Management System">
     <meta name="keywords" content="NIS, Nigeria Immigration Service, Employee Verification, Identification Management">
