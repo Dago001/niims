@@ -1154,7 +1154,12 @@ $total_filtered_records = $all_retrieve ? mysqli_num_rows($all_retrieve) : 0;
                         <?php endif; ?>
                         
                         <div class="row">
-                            <div class="col-md-12 text-right">
+                            <div class="col-md-6 col-sm-6 col-xs-12" style="margin-top: 5px; text-align: left;">
+                                <button type="button" class="btn btn-primary" onclick="printSelected()" id="printBtnTop" style="font-size: 13px !important; font-weight: bold !important; padding: 6px 16px !important;">
+                                    <i class="fa fa-print"></i> Print Selected Cards (<span id="selectedCountTop">0</span>)
+                                </button>
+                            </div>
+                            <div class="col-md-6 col-sm-6 col-xs-12 text-right">
                                 <button type="submit" class="btn btn-success">
                                     <i class="fa fa-filter"></i> Apply Filters
                                 </button>
@@ -1166,6 +1171,7 @@ $total_filtered_records = $all_retrieve ? mysqli_num_rows($all_retrieve) : 0;
                                 </a>
                             </div>
                         </div>
+
                     </form>
                 </div>
             </div>
@@ -1601,16 +1607,19 @@ $total_filtered_records = $all_retrieve ? mysqli_num_rows($all_retrieve) : 0;
         // Update print button text
         function updatePrintButton() {
             const printBtn = document.getElementById('printBtn');
+            const printBtnTop = document.getElementById('printBtnTop');
             const count = selectedRecords.length;
             
-            if (count > 0) {
-                printBtn.innerHTML = `<i class="fas fa-print"></i> Print ${count} Selected Card${count !== 1 ? 's' : ''}`;
-                printBtn.disabled = false;
-            } else {
-                printBtn.innerHTML = `<i class="fas fa-print"></i> Print Selected Cards`;
-                printBtn.disabled = false;
+            const btnHtml = `<i class="fas fa-print"></i> Print ${count > 0 ? count + ' ' : ''}Selected Card${count !== 1 ? 's' : ''}`;
+            
+            if (printBtn) {
+                printBtn.innerHTML = btnHtml;
+            }
+            if (printBtnTop) {
+                printBtnTop.innerHTML = `<i class="fa fa-print"></i> Print ${count > 0 ? count + ' ' : ''}Selected Card${count !== 1 ? 's' : ''}`;
             }
         }
+
         
         // Select all records on current page
         function selectAllRecords() {
