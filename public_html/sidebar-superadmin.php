@@ -92,30 +92,30 @@
                 <ul class="nav side-menu">
                   <li><a><i class="fa fa-home"></i> Home <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
-                      <li><a href="mainpage">Dashboard</a></li>
+                      <li><a href="mainpage.php">Dashboard</a></li>
                      
                     </ul>
                   </li>
                   <li><a><i class="fa fa-database"></i> Enrolment <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
-                    <li><a href="enrol_employee">New Enrolment</a></li>
-                      <li><a href="cgi_view">View All Enrolment</a></li>
-                      <li><a href="myenrolments">View My Enrolment</a></li>
-                      <li><a href="print-enrolment">Print Enrolment Slip</a></li>
+                    <li><a href="enrol_employee.php">New Enrolment</a></li>
+                      <li><a href="cgi_view.php">View All Enrolment</a></li>
+                      <li><a href="myenrolments.php">View My Enrolment</a></li>
+                      <li><a href="print-enrolment.php">Print Enrolment Slip</a></li>
                       
                     </ul>
                   </li>
                   <li><a><i class="fa fa-hand-o-up"></i> Biometrics <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
                       
-                      <li><a href="photocapture">Photo Capture</a></li>
-                      <li><a href="signaturecapture">Signature</a></li>                                            
+                      <li><a href="photocapture.php">Photo Capture</a></li>
+                      <li><a href="signaturecapture.php">Signature</a></li>                                            
                     </ul>
                   </li>
                   <li><a><i class="fa fa-book"></i> Update Records <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
-                      <li><a href="update_rank">Update Rank</a></li>
-                      <li><a href="enrolment-update">Update Staff Record</a></li>
+                      <li><a href="update_rank.php">Update Rank</a></li>
+                      <li><a href="enrolment-update.php">Update Staff Record</a></li>
                       <li><a href="https://niims.immigration.gov.ng/nisposting/login.php" target="_blank">Posting Order</a></li>
                       
                     </ul>
@@ -123,29 +123,28 @@
                   <li><a><i class="fa fa-laptop"></i> Card Management <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
 
-                      <li><a href="print-tables">Print Card</a></li>
-                      <li><a href="bulk_print">Bulk Print</a></li>
-                      <li><a href="printed-cards">Print History</a></li>
+                      <li><a href="print-tables.php">Print Card</a></li>
+                      <li><a href="bulk_print.php">Bulk Print</a></li>
+                      <li><a href="printed-cards.php">Print History</a></li>
                     </ul>
                   </li>
                   <li><a><i class="fa fa-user"></i> User Management <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
-                      <li><a href="createuser">Create User</a></li>
-                      <li><a href="audit_logs">Audit Logs</a></li>
-                      <li><a href="db_backup">Database Backup</a></li>
+                      <li><a href="createuser.php">Create User</a></li>
+                      <li><a href="audit_logs.php">Audit Logs</a></li>
+                      <li><a href="db_backup.php">Database Backup</a></li>
                     </ul>
                   </li>
               
                
                   <li><a><i class="fa fa-bar-chart-o"></i> Reports <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
-                        <li><a href="nominal_roll">Nominal Roll</a></li>
-                        <li><a href="nominal_roll_retired">Retired Nominal Roll</a></li>
-                      <li><a href="employeeChart">Employee</a></li>
-                      <li><a href="printed-cards-report">Cards Report</a></li>
-                      <li><a href="comingsoon">Posting</a></li>
-                      <li><a href="comingsoon">Distribution</a></li>
-                      <!-- <li><a href="other_charts.html">Other Charts</a></li> -->
+                        <li><a href="nominal_roll.php">Nominal Roll</a></li>
+                        <li><a href="nominal_roll_retired.php">Retired Nominal Roll</a></li>
+                      <li><a href="employeeChart.php">Employee</a></li>
+                      <li><a href="printed-cards-report.php">Cards Report</a></li>
+                      <li><a href="comingsoon.php">Posting</a></li>
+                      <li><a href="comingsoon.php">Distribution</a></li>
                     </ul>
                   </li>
                  

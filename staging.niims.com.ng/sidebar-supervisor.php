@@ -101,29 +101,25 @@
                 <ul class="nav side-menu">
                   <li><a><i class="fa fa-home"></i> Home <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
-                      <li><a href="mainpage">Dashboard</a></li>
+                      <li><a href="mainpage.php">Dashboard</a></li>
                     </ul>
                   </li>
                   <li><a><i class="fa fa-edit"></i> Enrolment <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
-                      <li><a href="enrol_employee">New Enrolment</a></li>
-                      <!--<li><a href="cgi_view">View All Enrolment</a></li> -->
-                      <li><a href="myenrolments">View My Enrolment</a></li>
-                      <!--<li><a href="print-enrolment">Print Enrolment Slip</a></li> -->                    
+                      <li><a href="enrol_employee.php">New Enrolment</a></li>
+                      <li><a href="myenrolments.php">View My Enrolment</a></li>
                     </ul>
                   </li>
                   
                   <li><a><i class="fa fa-database"></i> Update Records <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
-                      <!--<li><a href="update_rank">Update Rank</a></li>sidebar menu -->
-                      <li><a href="enrolment-update">Update Staff Record</a></li>
-                      
+                      <li><a href="enrolment-update.php">Update Staff Record</a></li>
                     </ul>
                   </li>
                  <li><a><i class="fa fa-hand-o-up"></i> Biometrics <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu"> 
-                      <li><a href="photocapture">Photo Capture</a></li>
-                      <li><a href="signaturecapture">Signature</a></li>                                               
+                      <li><a href="photocapture.php">Photo Capture</a></li>
+                      <li><a href="signaturecapture.php">Signature</a></li>                                               
                     </ul>
                   </li>
                   <!-- 

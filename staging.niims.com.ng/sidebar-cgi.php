@@ -92,7 +92,7 @@
                 <ul class="nav side-menu">
                   <li><a><i class="fa fa-home"></i> Home <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
-                      <li><a href="mainpage">Dashboard</a></li>
+                      <li><a href="mainpage.php">Dashboard</a></li>
                      
                     </ul>
                   </li>
@@ -102,7 +102,7 @@
                       <li><a href="enrolment-tables">View Enrolment</a></li> 
                       <li><a href="print-enrolment">Print Enrolment Slip</a></li>-->
                       
-                      <li><a href="cgi_view">View Enrolment</a></li>
+                      <li><a href="cgi_view.php">View Enrolment</a></li>
                     </ul>
                   </li>
                   <!--<li><a><i class="fa fa-hand-o-up"></i> Biometrics <span class="fa fa-chevron-down"></span></a>
@@ -138,8 +138,8 @@
                
                   <li><a><i class="fa fa-bar-chart-o"></i> Reports <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
-                        <li><a href="nominal_roll">Nominal Roll</a></li>
-                        <li><a href="nominal_roll_retired">Retired Nominal Roll</a></li>
+                        <li><a href="nominal_roll.php">Nominal Roll</a></li>
+                        <li><a href="nominal_roll_retired.php">Retired Nominal Roll</a></li>
                       
                      <!--  <li><a href="chartjs2.html">Cards</a></li>
                       <li><a href="morisjs.html">Posting</a></li>

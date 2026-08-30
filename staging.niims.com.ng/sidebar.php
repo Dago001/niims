@@ -95,35 +95,26 @@
                 <ul class="nav side-menu">
                   <li><a><i class="fa fa-home"></i> Home <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
-                      <li><a href="index">Dashboard</a></li>
-                      <!-- <li><a href="index2.html">Dashboard2</a></li>
-                      <li><a href="index3.html">Dashboard3</a></li> -->
+                      <li><a href="index.php">Dashboard</a></li>
                     </ul>
                   </li>
                   <li><a><i class="fa fa-edit"></i> Enrolment <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
-<!--                       <li><a href="form.html">General Form</a></li>
-                      <li><a href="form_advanced.html">Advanced Components</a></li>
-                      <li><a href="form_validation.html">Form Validation</a></li> -->
-                      <li><a href="enrol_employee">New Enrolment</a></li>
-                      <li><a href="enrolment-tables">View Enrolment</a></li>
-                      <li><a href="enrolment-update">Update Record</a></li>
-                      
+                      <li><a href="enrol_employee.php">New Enrolment</a></li>
+                      <li><a href="enrolment-tables.php">View Enrolment</a></li>
+                      <li><a href="enrolment-update.php">Update Record</a></li>
                     </ul>
                   </li>
                   <li><a><i class="fa fa-edit"></i> Biometrics <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
-                     <!-- <li><a href="form.html">General Form</a></li>
-                      <li><a href="form_advanced.html">Advanced Components</a></li>
-                      <li><a href="form_validation.html">Form Validation</a></li> -->
-                      <li><a href="photocapture">Photo Capture</a></li>
-                      <li><a href="signaturecapture">Signature</a></li>                                            
+                      <li><a href="photocapture.php">Photo Capture</a></li>
+                      <li><a href="signaturecapture.php">Signature</a></li>                                            
                     </ul>
                   </li>
                   <li><a><i class="fa fa-edit"></i> Card Management <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
 
-                      <li><a href="print-tables">Print Card</a></li>
+                      <li><a href="print-tables.php">Print Card</a></li>
                       <li><a href="#">Bulk Print</a></li>
                       <li><a href="#">Card Information</a></li>
                     </ul>
@@ -131,7 +122,7 @@
                   <li><a><i class="fa fa-desktop"></i> User Management <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
 
-                      <li><a href="createuser">Create User</a></li>
+                      <li><a href="createuser.php">Create User</a></li>
                       
                     </ul>
                   </li>

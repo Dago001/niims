@@ -99,13 +99,13 @@
                 <ul class="nav side-menu">
                   <li><a><i class="fa fa-home"></i> Home <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
-                      <li><a href="landing">Dashboard</a></li>
+                      <li><a href="landing.php">Dashboard</a></li>
                     </ul>
                   </li>
                   <li><a><i class="fa fa-database"></i> Enrolment <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
-                      <li><a href="enrol_employee">New Enrolment</a></li>
-                      <li><a href="myenrolments">View My Enrolments</a></li>
+                      <li><a href="enrol_employee.php">New Enrolment</a></li>
+                      <li><a href="myenrolments.php">View My Enrolments</a></li>
                       
                     </ul>
                   </li>
