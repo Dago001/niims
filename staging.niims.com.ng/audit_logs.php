@@ -30,8 +30,21 @@ $query = "SELECT * FROM tbl_audit_logs ORDER BY id DESC LIMIT 2000";
 $result = mysqli_query($conn, $query);
 ?>
 
+<style>
+@media (max-width: 767px) {
+    .dt-buttons {
+        margin-bottom: 15px !important;
+        float: none !important;
+        text-align: center !important;
+    }
+    .dt-buttons .btn {
+        margin-bottom: 5px !important;
+    }
+}
+</style>
+
 <!-- page content -->
-<div class="right_col" role="main">
+<div class="right_col" role="main" style="overflow-x: hidden;">
     <div class="">
         <div class="page-title">
             <div class="title_left">
@@ -53,55 +66,57 @@ $result = mysqli_query($conn, $query);
                             Real-time record of authentication attempts, personnel enrolments, record modifications, and user management events.
                         </p>
                         
-                        <table id="datatable-audit" class="table table-striped table-bordered dt-responsive nowrap" cellspacing="0" width="100%">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Timestamp</th>
-                                    <th>User ID / Service No</th>
-                                    <th>Username</th>
-                                    <th>Role</th>
-                                    <th>Action</th>
-                                    <th>Details</th>
-                                    <th>IP Address</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php 
-                                $sn = 1;
-                                if ($result && mysqli_num_rows($result) > 0):
-                                    while ($row = mysqli_fetch_assoc($result)):
-                                        // Format action badge color
-                                        $badge_class = 'label-default';
-                                        $action = $row['action'];
-                                        if (strpos($action, 'LOGIN_SUCCESS') !== false || strpos($action, 'SUCCESSFUL') !== false) {
-                                            $badge_class = 'label-success';
-                                        } elseif (strpos($action, 'FAILED') !== false || strpos($action, 'DENIED') !== false || strpos($action, 'DEACTIVATED') !== false) {
-                                            $badge_class = 'label-danger';
-                                        } elseif (strpos($action, 'ENROLMENT') !== false || strpos($action, 'CREATED') !== false) {
-                                            $badge_class = 'label-primary';
-                                        } elseif (strpos($action, 'UPDATE') !== false || strpos($action, 'ACTIVATED') !== false) {
-                                            $badge_class = 'label-info';
-                                        } elseif (strpos($action, 'LOGOUT') !== false) {
-                                            $badge_class = 'label-warning';
-                                        }
-                                ?>
+                        <div class="table-responsive" style="width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 15px;">
+                            <table id="datatable-audit" class="table table-striped table-bordered dt-responsive nowrap" cellspacing="0" width="100%">
+                                <thead>
                                     <tr>
-                                        <td><?php echo $sn++; ?></td>
-                                        <td><?php echo date('d-M-Y H:i:s', strtotime($row['created_at'])); ?></td>
-                                        <td><strong><?php echo htmlspecialchars($row['user_id']); ?></strong></td>
-                                        <td><?php echo htmlspecialchars($row['username']); ?></td>
-                                        <td><span class="label label-default"><?php echo htmlspecialchars($row['user_role']); ?></span></td>
-                                        <td><span class="label <?php echo $badge_class; ?>"><?php echo htmlspecialchars($row['action']); ?></span></td>
-                                        <td><?php echo htmlspecialchars($row['details']); ?></td>
-                                        <td><code><?php echo htmlspecialchars($row['ip_address']); ?></code></td>
+                                        <th>#</th>
+                                        <th>Timestamp</th>
+                                        <th>User ID / Service No</th>
+                                        <th>Username</th>
+                                        <th>Role</th>
+                                        <th>Action</th>
+                                        <th>Details</th>
+                                        <th>IP Address</th>
                                     </tr>
-                                <?php 
-                                    endwhile;
-                                endif; 
-                                ?>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    <?php 
+                                    $sn = 1;
+                                    if ($result && mysqli_num_rows($result) > 0):
+                                        while ($row = mysqli_fetch_assoc($result)):
+                                            // Format action badge color
+                                            $badge_class = 'label-default';
+                                            $action = $row['action'];
+                                            if (strpos($action, 'LOGIN_SUCCESS') !== false || strpos($action, 'SUCCESSFUL') !== false) {
+                                                $badge_class = 'label-success';
+                                            } elseif (strpos($action, 'FAILED') !== false || strpos($action, 'DENIED') !== false || strpos($action, 'DEACTIVATED') !== false) {
+                                                $badge_class = 'label-danger';
+                                            } elseif (strpos($action, 'ENROLMENT') !== false || strpos($action, 'CREATED') !== false) {
+                                                $badge_class = 'label-primary';
+                                            } elseif (strpos($action, 'UPDATE') !== false || strpos($action, 'ACTIVATED') !== false) {
+                                                $badge_class = 'label-info';
+                                            } elseif (strpos($action, 'LOGOUT') !== false) {
+                                                $badge_class = 'label-warning';
+                                            }
+                                    ?>
+                                        <tr>
+                                            <td><?php echo $sn++; ?></td>
+                                            <td><?php echo date('d-M-Y H:i:s', strtotime($row['created_at'])); ?></td>
+                                            <td><strong><?php echo htmlspecialchars($row['user_id']); ?></strong></td>
+                                            <td><?php echo htmlspecialchars($row['username']); ?></td>
+                                            <td><span class="label label-default"><?php echo htmlspecialchars($row['user_role']); ?></span></td>
+                                            <td><span class="label <?php echo $badge_class; ?>"><?php echo htmlspecialchars($row['action']); ?></span></td>
+                                            <td><?php echo htmlspecialchars($row['details']); ?></td>
+                                            <td><code><?php echo htmlspecialchars($row['ip_address']); ?></code></td>
+                                        </tr>
+                                    <?php 
+                                        endwhile;
+                                    endif; 
+                                    ?>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
