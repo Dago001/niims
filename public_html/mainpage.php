@@ -259,10 +259,12 @@ if ($result3) {
               <div class="count green" style="font-size: 30px; font-weight: bold;"><?php echo $my_enrolled_count; ?></div>
             </div>
             <?php endif; ?>
+            <?php if ($_SESSION['role'] !== "Supervisor"): ?>
             <div class="col-md-2 col-sm-4 col-xs-6 tile_stats_count" style="flex: 1; min-width: 140px; margin-bottom: 10px;">
               <span class="count_top"><i class="fa fa-cogs"></i> System Users</span>
               <div class="count red" style="font-size: 30px; font-weight: bold;"><?php echo $numb4; ?></div>
             </div>
+            <?php endif; ?>
           </div>
           
           <br />
