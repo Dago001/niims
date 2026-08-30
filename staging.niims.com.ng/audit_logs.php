@@ -105,6 +105,21 @@ $result = mysqli_query($conn, $query);
                             Real-time record of authentication attempts, personnel enrolments, record modifications, and user management events.
                         </p>
                         
+                        <!-- Search Bar -->
+                        <div class="row" style="margin-bottom: 15px;">
+                            <div class="col-md-6 col-sm-8 col-xs-12">
+                                <label for="custom-audit-search" style="font-size: 13px; font-weight: 600; color: #333; margin-bottom: 5px;">
+                                    <i class="fa fa-search"></i> Search Audit Logs:
+                                </label>
+                                <div class="input-group">
+                                    <input type="text" id="custom-audit-search" class="form-control" placeholder="Search by Service No, Username, Action, IP, or details...">
+                                    <span class="input-group-btn">
+                                        <button class="btn btn-primary" type="button" id="btn-search-trigger"><i class="fa fa-search"></i> Search</button>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="table-responsive" style="width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 15px;">
                             <table id="datatable-audit" class="table table-striped table-bordered dt-responsive nowrap" cellspacing="0" width="100%">
                                 <thead>
@@ -179,14 +194,14 @@ $result = mysqli_query($conn, $query);
 
 <script>
 $(document).ready(function() {
-    $('#datatable-audit').DataTable({
-        dom: '<"row"<"col-md-6 col-sm-6 col-xs-12"B><"col-md-6 col-sm-6 col-xs-12"f>>rt<"row"<"col-md-6 col-sm-6 col-xs-12"i><"col-md-6 col-sm-6 col-xs-12"p>>',
+    var table = $('#datatable-audit').DataTable({
+        dom: 'Blfrtip',
         pageLength: 50,
         lengthMenu: [[10, 25, 50, 100, 250, -1], [10, 25, 50, 100, 250, "All"]],
         order: [[0, 'asc']],
         language: {
-            search: "_INPUT_",
-            searchPlaceholder: "Search audit logs...",
+            search: "Filter: ",
+            searchPlaceholder: "Type to filter...",
             lengthMenu: "Show _MENU_ entries per page",
             info: "Showing _START_ to _END_ of _TOTAL_ audit entries",
             paginate: {
@@ -223,6 +238,14 @@ $(document).ready(function() {
                 className: 'btn-sm btn-info'
             }
         ]
+    });
+
+    // Wire up custom search bar
+    $('#custom-audit-search').on('keyup change clear', function() {
+        table.search(this.value).draw();
+    });
+    $('#btn-search-trigger').on('click', function() {
+        table.search($('#custom-audit-search').val()).draw();
     });
 });
 </script>
