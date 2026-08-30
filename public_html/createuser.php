@@ -27,6 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_id']) && isset($_
 
     $update_sql = "UPDATE tbl_users SET is_active = '$status' WHERE user_id = '$user_id'";
     if (mysqli_query($conn, $update_sql)) {
+        $action_label = ($status == 1) ? 'USER_ACTIVATED' : 'USER_DEACTIVATED';
+        log_activity($conn, $action_label, "Changed status of user $user_id to " . ($status == 1 ? 'Active' : 'Inactive'));
         $_SESSION['status_success'] = true;
         $_SESSION['status_message'] = "User status updated successfully!";
     } else {

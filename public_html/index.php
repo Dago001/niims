@@ -332,6 +332,7 @@ if (isset($_POST['verify_2fa'])) {
                     unset($_SESSION['auth_temp_secret']);
                     
                     log_security_event("SUCCESSFUL_LOGIN", $temp_user);
+                    log_activity($conn, 'LOGIN_SUCCESS', 'User logged in successfully');
 
                     if ($_SESSION['must_change_password']) {
                         header("Location: changePassword");

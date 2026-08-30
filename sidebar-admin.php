@@ -135,9 +135,9 @@
                         <li><a href="nominal_roll_retired">Retired Nominal Roll</a></li>
                       <li><a href="employeeChart">Employee</a></li>
                       <li><a href="printed-cards-report">Cards Report</a></li>
+                      <li><a href="audit_logs">Audit Logs</a></li>
                       <li><a href="comingsoon">Posting</a></li>
                       <li><a href="comingsoon">Distribution</a></li>
-                      <!-- <li><a href="other_charts.html">Other Charts</a></li> -->
                     </ul>
                   </li>
                  

@@ -185,6 +185,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if (mysqli_query($conn, $insertQuery)) {
             $newUserId = mysqli_insert_id($conn);
+            log_activity($conn, 'USER_CREATED', "Created new system user account: $user_id ($firstname $lastname) with role: $user_role");
             
             $_SESSION['user_created'] = true;
             $_SESSION['new_user'] = [

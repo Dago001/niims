@@ -1,5 +1,10 @@
 <?php
 session_start();
+require_once('db/db.php');
+
+if (!empty($_SESSION['username'])) {
+    log_activity($conn, 'USER_LOGOUT', 'User logged out');
+}
 
 // Clear all session variables
 $_SESSION = [];

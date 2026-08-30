@@ -88,7 +88,7 @@
             <!-- sidebar menu -->
             <div id="sidebar-menu" class="main_menu_side hidden-print main_menu">
               <div class="menu_section">
-                <h3>Admin Menu</h3>
+                <h3>Super Admin Menu</h3>
                 <ul class="nav side-menu">
                   <li><a><i class="fa fa-home"></i> Home <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
@@ -130,9 +130,9 @@
                   </li>
                   <li><a><i class="fa fa-user"></i> User Management <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
-
                       <li><a href="createuser">Create User</a></li>
-                      
+                      <li><a href="audit_logs">Audit Logs</a></li>
+                      <li><a href="db_backup">Database Backup</a></li>
                     </ul>
                   </li>
               

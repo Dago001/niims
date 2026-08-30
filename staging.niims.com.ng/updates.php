@@ -118,6 +118,7 @@ if (isset($_POST["updateProfile"])) {
     $result = mysqli_query($conn, $updateQuery);
     
     if ($result) {
+        log_activity($conn, 'USER_UPDATE', "Updated account profile for user: $user_id ($firstname $lastname)");
         $_SESSION['profile_update_success'] = true;
         $_SESSION['profile_update_message'] = "User profile updated successfully!";
         $_SESSION['profile_updated_user_id'] = $user_id;

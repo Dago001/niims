@@ -36,6 +36,25 @@ if ($check_mcp_col && mysqli_num_rows($check_mcp_col) == 0) {
     mysqli_query($conn, "ALTER TABLE tbl_users ADD must_change_password TINYINT(1) NOT NULL DEFAULT 0");
 }
 
+// Self-healing: ensure tbl_audit_logs table exists
+$check_audit_table = mysqli_query($conn, "SHOW TABLES LIKE 'tbl_audit_logs'");
+if ($check_audit_table && mysqli_num_rows($check_audit_table) == 0) {
+    $create_audit_table_sql = "CREATE TABLE IF NOT EXISTS tbl_audit_logs (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id VARCHAR(100) NOT NULL,
+        username VARCHAR(100) NOT NULL,
+        user_role VARCHAR(50) NOT NULL,
+        action VARCHAR(100) NOT NULL,
+        details TEXT DEFAULT NULL,
+        ip_address VARCHAR(45) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX (user_id),
+        INDEX (action),
+        INDEX (created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+    mysqli_query($conn, $create_audit_table_sql);
+}
+
 // Global enforcement: a user flagged for a mandatory password change is
 // redirected to changePassword on every request until they comply, no
 // matter which page they try to load. Guarded on an active session so
@@ -49,4 +68,7 @@ if (session_status() === PHP_SESSION_ACTIVE && !empty($_SESSION['username']) && 
         exit();
     }
 }
+
+// Automatically load audit logger helper
+require_once __DIR__ . '/../functions/audit_logger.php';
 ?>

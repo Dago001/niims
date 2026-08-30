@@ -167,6 +167,9 @@ try {
     // Commit transaction
     mysqli_commit($conn);
     
+    // Audit Log Entry
+    log_activity($conn, 'NEW_ENROLMENT', "Enrolled new employee Service No: $NISNo ($surname $firstName)");
+    
     // Success response
     $response['success'] = true;
     $response['message'] = 'Record saved successfully!';
