@@ -5009,6 +5009,14 @@ if (typeof NProgress != 'undefined') {
 		document.addEventListener('contextmenu', function(e) {
 			e.preventDefault();
 		});
+
+		// Unconditionally hide loading spinner when page is restored from bfcache
+		window.addEventListener('pageshow', function(e) {
+			var overlay = document.getElementById('overlay');
+			var spinner = document.getElementById('loadingSpinner');
+			if (overlay) overlay.style.display = 'none';
+			if (spinner) spinner.style.display = 'none';
+		});
 				
 		init_sparklines();
 		init_flot_chart();
