@@ -334,16 +334,18 @@ if (isset($_POST['verify_2fa'])) {
                     log_security_event("SUCCESSFUL_LOGIN", $temp_user);
                     log_activity($conn, 'LOGIN_SUCCESS', 'User logged in successfully');
 
+                    $role_clean = strtolower(trim($_SESSION['role'] ?? ''));
                     if ($_SESSION['must_change_password']) {
-                        header("Location: changePassword");
+                        header("Location: changePassword.php");
                         exit();
-                    } elseif (in_array($_SESSION['role'], ['SuperAdmin', 'Admin', 'Supervisor', 'Report'])) {
-                        header("Location: mainpage");
+                    } elseif (in_array($role_clean, ['dataentry', 'data_entry', 'data entry'])) {
+                        header("Location: landing.php");
                         exit();
                     } else {
-                        header("Location: landing");
+                        header("Location: mainpage.php");
                         exit();
                     }
+
                 } else {
                     $error_message = "Invalid 6-digit code. Please check your Google Authenticator and try again.";
                     $has_error = true;
