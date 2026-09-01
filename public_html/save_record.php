@@ -144,9 +144,21 @@ try {
         exit;
     }
 
-    // 3. Qualification Info Insertion (Explicit named columns - omitting auto-increment id)
+    // 3. Qualification Info Insertion (Self-healing column detection for certificate_number/certificateNo & date_obtained/dateObtained)
+    $cert_col = 'certificate_number';
+    $q_cert = mysqli_query($conn, "SHOW COLUMNS FROM tbl_qualification LIKE 'certificate_number'");
+    if (!$q_cert || mysqli_num_rows($q_cert) == 0) {
+        $cert_col = 'certificateNo';
+    }
+
+    $date_col = 'date_obtained';
+    $q_date = mysqli_query($conn, "SHOW COLUMNS FROM tbl_qualification LIKE 'date_obtained'");
+    if (!$q_date || mysqli_num_rows($q_date) == 0) {
+        $date_col = 'dateObtained';
+    }
+
     $q3 = mysqli_query($conn, "INSERT INTO tbl_qualification (
-        serviceNo, qualification, institution, certificateNo, dateObtained, date_of_entry
+        serviceNo, qualification, institution, `$cert_col`, `$date_col`, date_of_entry
     ) VALUES (
         '$NISNo', '$qualification', '$institution', '$certificateNo', '$dateObtained', '$date_of_entry'
     )");
@@ -172,9 +184,39 @@ try {
         exit;
     }
 
-    // 5. Finance Details Insertion (Explicit named columns - omitting auto-increment id)
+    // 5. Finance Details Insertion (Self-healing column detection for IPPIS_No/ippis, accountNo/account_number, PFA/pfa, pensionNo/rsa, NHF_No/nhf)
+    $ippis_col = 'IPPIS_No';
+    $q_ippis = mysqli_query($conn, "SHOW COLUMNS FROM tbl_finance LIKE 'IPPIS_No'");
+    if (!$q_ippis || mysqli_num_rows($q_ippis) == 0) {
+        $ippis_col = 'ippis';
+    }
+
+    $acc_col = 'accountNo';
+    $q_acc = mysqli_query($conn, "SHOW COLUMNS FROM tbl_finance LIKE 'accountNo'");
+    if (!$q_acc || mysqli_num_rows($q_acc) == 0) {
+        $acc_col = 'account_number';
+    }
+
+    $pfa_col = 'PFA';
+    $q_pfa = mysqli_query($conn, "SHOW COLUMNS FROM tbl_finance LIKE 'PFA'");
+    if (!$q_pfa || mysqli_num_rows($q_pfa) == 0) {
+        $pfa_col = 'pfa';
+    }
+
+    $pension_col = 'pensionNo';
+    $q_pen = mysqli_query($conn, "SHOW COLUMNS FROM tbl_finance LIKE 'pensionNo'");
+    if (!$q_pen || mysqli_num_rows($q_pen) == 0) {
+        $pension_col = 'rsa';
+    }
+
+    $nhf_col = 'NHF_No';
+    $q_nhf = mysqli_query($conn, "SHOW COLUMNS FROM tbl_finance LIKE 'NHF_No'");
+    if (!$q_nhf || mysqli_num_rows($q_nhf) == 0) {
+        $nhf_col = 'nhf';
+    }
+
     $q5 = mysqli_query($conn, "INSERT INTO tbl_finance (
-        serviceNo, ippis, bank, account_number, pfa, rsa, nhf, date_of_entry
+        serviceNo, `$ippis_col`, bank, `$acc_col`, `$pfa_col`, `$pension_col`, `$nhf_col`, date_of_entry
     ) VALUES (
         '$NISNo', '$ippis', '$bank', '$account_number', '$pfa', '$rsa', '$nhf', '$date_of_entry'
     )");
