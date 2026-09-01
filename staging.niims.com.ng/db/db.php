@@ -19,7 +19,19 @@ define('DB_DATABASE', 'niimscom_idcard');
 mysqli_report(MYSQLI_REPORT_OFF);
 
 try {
+    // Attempt direct database connection
     $conn = @mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
+
+    // If database connection failed (e.g., missing database on local XAMPP), try auto-creating on localhost
+    if (!$conn) {
+        $server_conn = @mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD);
+        if ($server_conn) {
+            @mysqli_query($server_conn, "CREATE DATABASE IF NOT EXISTS `" . DB_DATABASE . "` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+            if (@mysqli_select_db($server_conn, DB_DATABASE)) {
+                $conn = $server_conn;
+            }
+        }
+    }
 } catch (Throwable $e) {
     $conn = false;
     error_log("Database connection exception: " . $e->getMessage());
@@ -32,15 +44,16 @@ if (!$conn) {
     die("
     <div style='font-family: Arial, sans-serif; background-color: #f8d7da; color: #721c24; padding: 30px; margin: 50px auto; max-width: 600px; border: 1px solid #f5c6cb; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);'>
         <h2 style='margin-top:0;'>⚠️ Database Connection Required</h2>
-        <p>NIIMS could not connect to the MySQL database on the live server.</p>
+        <p>NIIMS could not connect to the MySQL database.</p>
         <hr style='border-top: 1px solid #f5c6cb;'>
         <p><strong>To resolve this issue:</strong></p>
         <ol style='text-align: left; line-height: 1.6;'>
-            <li>Open <code>db/db.php</code> on your live server.</li>
+            <li>Ensure MySQL Service is started in XAMPP Control Panel.</li>
+            <li>Open <code>db/db.php</code>.</li>
             <li>Set <code>DB_SERVER</code> (usually <code>localhost</code>).</li>
-            <li>Set <code>DB_USERNAME</code> (your live cPanel DB User).</li>
-            <li>Set <code>DB_PASSWORD</code> (your live cPanel DB Password).</li>
-            <li>Set <code>DB_DATABASE</code> (your live cPanel Database Name).</li>
+            <li>Set <code>DB_USERNAME</code> (e.g., <code>root</code> for localhost).</li>
+            <li>Set <code>DB_PASSWORD</code> (empty string <code>''</code> for local XAMPP).</li>
+            <li>Set <code>DB_DATABASE</code> (<code>niimscom_idcard</code>).</li>
         </ol>
     </div>");
 }
