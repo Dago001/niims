@@ -40,55 +40,65 @@ if ($user_role_clean === 'superadmin' || $user_role_clean === 'super_admin' || $
 include 'menu-footer-buttons.php';
 include 'top-navigation.php';
 
-// Fetch audit logs with global search support
+// ============================================================================
+// PAGINATION & GLOBAL SEARCH SETUP (EXACTLY 30 RECORDS PER PAGE)
+// ============================================================================
+$page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+$records_per_page = 30;
+$offset = ($page - 1) * $records_per_page;
+
 $search_query = isset($_GET['search']) ? trim($_GET['search']) : '';
+$where_sql = '';
+$search_params = [];
+$param_types = '';
+
 if (!empty($search_query)) {
-    // Query entire audit table when a specific search term is supplied
-    $query = "SELECT * FROM tbl_audit_logs 
-              WHERE user_id LIKE ? OR username LIKE ? OR user_role LIKE ? OR action LIKE ? OR details LIKE ? OR ip_address LIKE ? 
-              ORDER BY id DESC";
-    $stmt = mysqli_prepare($conn, $query);
-    $param = '%' . $search_query . '%';
-    mysqli_stmt_bind_param($stmt, 'ssssss', $param, $param, $param, $param, $param, $param);
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
-} else {
-    // Default fetch up to 5000 records so DataTables breaks into 30 entries per page
-    $query = "SELECT * FROM tbl_audit_logs ORDER BY id DESC LIMIT 5000";
-    $result = mysqli_query($conn, $query);
+    // When searching, search the ENTIRE database across all history fields
+    $where_sql = "WHERE (user_id LIKE ? OR username LIKE ? OR user_role LIKE ? OR action LIKE ? OR details LIKE ? OR ip_address LIKE ?)";
+    $param_val = '%' . $search_query . '%';
+    $search_params = array_fill(0, 6, $param_val);
+    $param_types = 'ssssss';
 }
 
+// 1. Fetch Total Record Count for Pagination Calculation
+$count_sql = "SELECT COUNT(*) as total FROM tbl_audit_logs $where_sql";
+$count_stmt = mysqli_prepare($conn, $count_sql);
+
+if (!empty($search_params)) {
+    mysqli_stmt_bind_param($count_stmt, $param_types, ...$search_params);
+}
+mysqli_stmt_execute($count_stmt);
+$count_res = mysqli_stmt_get_result($count_stmt);
+$count_row = mysqli_fetch_assoc($count_res);
+$total_records = isset($count_row['total']) ? intval($count_row['total']) : 0;
+$total_pages = max(1, ceil($total_records / $records_per_page));
+mysqli_stmt_close($count_stmt);
+
+// Ensure current page does not exceed max pages
+if ($page > $total_pages) {
+    $page = $total_pages;
+    $offset = ($page - 1) * $records_per_page;
+}
+
+// 2. Main Paginated Query (LIMIT 30 OFFSET X)
+$query = "SELECT * FROM tbl_audit_logs $where_sql ORDER BY id DESC LIMIT ? OFFSET ?";
+$main_params = $search_params;
+$main_params[] = $records_per_page;
+$main_params[] = $offset;
+$main_types = $param_types . 'ii';
+
+$stmt = mysqli_prepare($conn, $query);
+mysqli_stmt_bind_param($stmt, $main_types, ...$main_params);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
 ?>
 
 <style>
 .dataTables_filter {
-    text-align: right;
-    margin-bottom: 15px;
-}
-.dataTables_filter label {
-    font-weight: 500;
-    margin-bottom: 0;
-    width: 100%;
-}
-.dataTables_filter input {
-    width: 250px !important;
-    max-width: 100%;
-    display: inline-block;
-    padding: 6px 12px;
-    font-size: 13px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
-    transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
-}
-.dataTables_filter input:focus {
-    border-color: #1abb9c;
-    outline: 0;
-    box-shadow: inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(26,187,156,.6);
+    display: none; /* Hidden because custom global search box handles filtering */
 }
 .dataTables_paginate {
-    text-align: right;
-    margin-top: 10px;
+    display: none; /* Hidden because native PHP 30-record pagination is rendered below */
 }
 @media (max-width: 767px) {
     .dt-buttons {
@@ -98,16 +108,6 @@ if (!empty($search_query)) {
     }
     .dt-buttons .btn {
         margin-bottom: 5px !important;
-    }
-    .dataTables_filter {
-        text-align: center !important;
-        margin-top: 10px;
-    }
-    .dataTables_filter input {
-        width: 100% !important;
-    }
-    .dataTables_paginate {
-        text-align: center !important;
     }
 }
 </style>
@@ -127,7 +127,7 @@ if (!empty($search_query)) {
             <div class="col-md-12 col-sm-12 col-xs-12">
                 <div class="x_panel">
                     <div class="x_title">
-                        <h2>Security & Activity Audit Trail</h2>
+                        <h2>Security & Activity Audit Trail <small>(Page <?php echo $page; ?> of <?php echo $total_pages; ?> - <?php echo number_format($total_records); ?> Total Entries)</small></h2>
                         <div class="clearfix"></div>
                     </div>
                     <div class="x_content">
@@ -155,6 +155,13 @@ if (!empty($search_query)) {
                             </div>
                         </div>
 
+                        <?php if (!empty($search_query)): ?>
+                        <div class="alert alert-info" style="padding: 10px 15px; margin-bottom: 15px;">
+                            <i class="fa fa-info-circle"></i> Showing search results across entire database for: <strong>"<?php echo htmlspecialchars($search_query); ?>"</strong>
+                            (<strong><?php echo number_format($total_records); ?></strong> matching records found)
+                            <a href="audit_logs.php" class="btn btn-xs btn-default pull-right"><i class="fa fa-times"></i> Clear Search</a>
+                        </div>
+                        <?php endif; ?>
 
                         <div class="table-responsive" style="width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 15px;">
                             <table id="datatable-audit" class="table table-striped table-bordered dt-responsive nowrap" cellspacing="0" width="100%">
@@ -172,7 +179,7 @@ if (!empty($search_query)) {
                                 </thead>
                                 <tbody>
                                     <?php 
-                                    $sn = 1;
+                                    $sn = $offset + 1;
                                     if ($result && mysqli_num_rows($result) > 0):
                                         while ($row = mysqli_fetch_assoc($result)):
                                             // Format action badge color
@@ -202,11 +209,63 @@ if (!empty($search_query)) {
                                         </tr>
                                     <?php 
                                         endwhile;
-                                    endif; 
+                                    else:
                                     ?>
+                                        <tr>
+                                            <td colspan="8" class="text-center" style="padding: 30px; color: #777;">
+                                                <i class="fa fa-info-circle fa-2x"></i><br>
+                                                No audit log entries found<?php echo !empty($search_query) ? ' matching "' . htmlspecialchars($search_query) . '"' : ''; ?>.
+                                            </td>
+                                        </tr>
+                                    <?php endif; ?>
                                 </tbody>
                             </table>
                         </div>
+
+                        <!-- Pagination Navigation -->
+                        <div class="row" style="margin-top: 15px;">
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                <p style="margin-top: 7px; color: #666; font-size: 13px;">
+                                    Showing <strong><?php echo $total_records > 0 ? ($offset + 1) : 0; ?></strong> to <strong><?php echo min($offset + $records_per_page, $total_records); ?></strong> of <strong><?php echo number_format($total_records); ?></strong> entries
+                                </p>
+                            </div>
+                            <div class="col-md-6 col-sm-6 col-xs-12 text-right">
+                                <?php if ($total_pages > 1): ?>
+                                <ul class="pagination pagination-sm" style="margin: 0;">
+                                    <?php
+                                    $base_url = 'audit_logs.php?' . (!empty($search_query) ? 'search=' . urlencode($search_query) . '&' : '') . 'page=';
+                                    
+                                    // First & Prev
+                                    if ($page > 1) {
+                                        echo '<li><a href="' . $base_url . '1">&laquo; First</a></li>';
+                                        echo '<li><a href="' . $base_url . ($page - 1) . '">&lsaquo; Prev</a></li>';
+                                    } else {
+                                        echo '<li class="disabled"><span>&laquo; First</span></li>';
+                                        echo '<li class="disabled"><span>&lsaquo; Prev</span></li>';
+                                    }
+
+                                    // Page numbers
+                                    $start_p = max(1, $page - 2);
+                                    $end_p = min($total_pages, $page + 2);
+                                    for ($p = $start_p; $p <= $end_p; $p++) {
+                                        $active = ($p == $page) ? 'class="active"' : '';
+                                        echo '<li ' . $active . '><a href="' . $base_url . $p . '">' . $p . '</a></li>';
+                                    }
+
+                                    // Next & Last
+                                    if ($page < $total_pages) {
+                                        echo '<li><a href="' . $base_url . ($page + 1) . '">Next &rsaquo;</a></li>';
+                                        echo '<li><a href="' . $base_url . $total_pages . '">Last &raquo;</a></li>';
+                                    } else {
+                                        echo '<li class="disabled"><span>Next &rsaquo;</span></li>';
+                                        echo '<li class="disabled"><span>Last &raquo;</span></li>';
+                                    }
+                                    ?>
+                                </ul>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -217,8 +276,12 @@ if (!empty($search_query)) {
 
 <?php include 'footer.php'; ?>
 
-<!-- DataTables Buttons CSS & JS for Exporting -->
+<!-- DataTables Core & Export Plugins -->
+<link href="vendors/datatables.net-bs/css/dataTables.bootstrap.min.css" rel="stylesheet">
 <link href="vendors/datatables.net-buttons-bs/css/buttons.bootstrap.min.css" rel="stylesheet">
+
+<script src="vendors/datatables.net/js/jquery.dataTables.min.js"></script>
+<script src="vendors/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
 <script src="vendors/datatables.net-buttons/js/dataTables.buttons.min.js"></script>
 <script src="vendors/datatables.net-buttons-bs/js/buttons.bootstrap.min.js"></script>
 <script src="vendors/datatables.net-buttons/js/buttons.flash.min.js"></script>
@@ -230,58 +293,40 @@ if (!empty($search_query)) {
 
 <script>
 $(document).ready(function() {
-    var table = $('#datatable-audit').DataTable({
-        dom: 'Blfrtip',
-        pageLength: 30,
-        lengthMenu: [[10, 25, 30, 50, 100, 250, -1], [10, 25, 30, 50, 100, 250, "All"]],
-        order: [[0, 'asc']],
-        language: {
-            search: "Filter: ",
-            searchPlaceholder: "Type to filter...",
-            lengthMenu: "Show _MENU_ entries per page",
-            info: "Showing _START_ to _END_ of _TOTAL_ audit entries",
-            paginate: {
-                first: "First",
-                last: "Last",
-                next: "Next",
-                previous: "Previous"
-            }
-        },
-        buttons: [
-            {
-                extend: 'copy',
-                className: 'btn-sm btn-default'
-            },
-            {
-                extend: 'csv',
-                className: 'btn-sm btn-primary',
-                title: 'NIIMS_Audit_Logs_' + new Date().toISOString().slice(0,10)
-            },
-            {
-                extend: 'excel',
-                className: 'btn-sm btn-success',
-                title: 'NIIMS_Audit_Logs_' + new Date().toISOString().slice(0,10)
-            },
-            {
-                extend: 'pdfHtml5',
-                className: 'btn-sm btn-danger',
-                title: 'NIIMS Audit Trail Report',
-                orientation: 'landscape',
-                pageSize: 'A4'
-            },
-            {
-                extend: 'print',
-                className: 'btn-sm btn-info'
-            }
-        ]
-    });
-
-    // Wire up custom search bar
-    $('#custom-audit-search').on('keyup change clear', function() {
-        table.search(this.value).draw();
-    });
-    $('#btn-search-trigger').on('click', function() {
-        table.search($('#custom-audit-search').val()).draw();
-    });
+    if ($.fn.DataTable) {
+        $('#datatable-audit').DataTable({
+            dom: 'Bfrtip',
+            paging: false,
+            info: false,
+            ordering: false,
+            buttons: [
+                {
+                    extend: 'copy',
+                    className: 'btn-sm btn-default'
+                },
+                {
+                    extend: 'csv',
+                    className: 'btn-sm btn-primary',
+                    title: 'NIIMS_Audit_Logs_' + new Date().toISOString().slice(0,10)
+                },
+                {
+                    extend: 'excel',
+                    className: 'btn-sm btn-success',
+                    title: 'NIIMS_Audit_Logs_' + new Date().toISOString().slice(0,10)
+                },
+                {
+                    extend: 'pdfHtml5',
+                    className: 'btn-sm btn-danger',
+                    title: 'NIIMS Audit Trail Report',
+                    orientation: 'landscape',
+                    pageSize: 'A4'
+                },
+                {
+                    extend: 'print',
+                    className: 'btn-sm btn-info'
+                }
+            ]
+        });
+    }
 });
 </script>
