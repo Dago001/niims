@@ -219,17 +219,17 @@ require_once(__DIR__ . '/db/GoogleAuthenticator.php');
 
 // Create Google Authenticator columns dynamically if they do not exist
 $check_secret_col = mysqli_query($conn, "SHOW COLUMNS FROM tbl_users LIKE 'google_auth_secret'");
-if (mysqli_num_rows($check_secret_col) == 0) {
+if ($check_secret_col && mysqli_num_rows($check_secret_col) == 0) {
     mysqli_query($conn, "ALTER TABLE tbl_users ADD google_auth_secret VARCHAR(32) DEFAULT NULL");
 }
 $check_enabled_col = mysqli_query($conn, "SHOW COLUMNS FROM tbl_users LIKE 'google_auth_enabled'");
-if (mysqli_num_rows($check_enabled_col) == 0) {
+if ($check_enabled_col && mysqli_num_rows($check_enabled_col) == 0) {
     mysqli_query($conn, "ALTER TABLE tbl_users ADD google_auth_enabled TINYINT(1) DEFAULT 0");
 }
 
 // Server-side brute-force tracking table (see check_brute_force/record_failed_attempt)
 $check_attempts_table = mysqli_query($conn, "SHOW TABLES LIKE 'tbl_login_attempts'");
-if (mysqli_num_rows($check_attempts_table) == 0) {
+if ($check_attempts_table && mysqli_num_rows($check_attempts_table) == 0) {
     mysqli_query($conn, "CREATE TABLE tbl_login_attempts (
         id INT AUTO_INCREMENT PRIMARY KEY,
         identifier VARCHAR(191) NOT NULL,

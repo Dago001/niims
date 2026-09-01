@@ -15,49 +15,14 @@ define('DB_USERNAME', 'root');
 define('DB_PASSWORD', '');
 define('DB_DATABASE', 'niimscom_idcard');
 
-// Turn off automatic mysqli exception throwing to prevent HTTP 500 errors on connection failures
-mysqli_report(MYSQLI_REPORT_OFF);
-
-try {
-    // Attempt direct database connection
-    $conn = @mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
-
-    // If database connection failed (e.g., missing database on local XAMPP), try auto-creating on localhost
-    if (!$conn) {
-        $server_conn = @mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD);
-        if ($server_conn) {
-            @mysqli_query($server_conn, "CREATE DATABASE IF NOT EXISTS `" . DB_DATABASE . "` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-            if (@mysqli_select_db($server_conn, DB_DATABASE)) {
-                $conn = $server_conn;
-            }
-        }
-    }
-} catch (Throwable $e) {
-    $conn = false;
-    error_log("Database connection exception: " . $e->getMessage());
-}
+$conn = mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
 
 if (!$conn) {
-    // Log the real error server-side
+    // Log the real error server-side, never expose it to the browser
     error_log("Database connection failed: " . mysqli_connect_error());
     http_response_code(503);
-    die("
-    <div style='font-family: Arial, sans-serif; background-color: #f8d7da; color: #721c24; padding: 30px; margin: 50px auto; max-width: 600px; border: 1px solid #f5c6cb; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);'>
-        <h2 style='margin-top:0;'>⚠️ Database Connection Required</h2>
-        <p>NIIMS could not connect to the MySQL database.</p>
-        <hr style='border-top: 1px solid #f5c6cb;'>
-        <p><strong>To resolve this issue:</strong></p>
-        <ol style='text-align: left; line-height: 1.6;'>
-            <li>Ensure MySQL Service is started in XAMPP Control Panel.</li>
-            <li>Open <code>db/db.php</code>.</li>
-            <li>Set <code>DB_SERVER</code> (usually <code>localhost</code>).</li>
-            <li>Set <code>DB_USERNAME</code> (e.g., <code>root</code> for localhost).</li>
-            <li>Set <code>DB_PASSWORD</code> (empty string <code>''</code> for local XAMPP).</li>
-            <li>Set <code>DB_DATABASE</code> (<code>niimscom_idcard</code>).</li>
-        </ol>
-    </div>");
+    die("Service temporarily unavailable. Please try again later.");
 }
-
 
 // Set character set
 if (!mysqli_set_charset($conn, "utf8mb4")) {
@@ -110,49 +75,12 @@ if ($check_card_status_print && mysqli_num_rows($check_card_status_print) > 0) {
 // matter which page they try to load. Guarded on an active session so
 // scripts that never call session_start() (ajax helpers, api.php) aren't
 // touched.
-// Global enforcement: a user flagged for a mandatory password change is
-// redirected to changePassword on every request until they comply, no
-// matter which page they try to load. Guarded on an active session so
-// scripts that never call session_start() (ajax helpers, api.php) aren't
-// touched.
-if (session_status() === PHP_SESSION_ACTIVE && !empty($_SESSION['username'])) {
-    // 20-minute (1200 seconds) inactivity auto-logout
-    $inactivity_timeout = 1200;
-    
-    if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > $inactivity_timeout)) {
-        // Log auto-logout event
-        $username = $_SESSION['username'] ?? 'User';
-        if (function_exists('log_audit_event') && isset($conn) && $conn) {
-            log_audit_event($conn, 'AUTO_LOGOUT_INACTIVITY', "User {$username} logged out after 20 minutes of inactivity");
-        }
-
-        // Destroy session
-        $_SESSION = array();
-        if (ini_get("session.use_cookies")) {
-            $params = session_get_cookie_params();
-            setcookie(session_name(), '', time() - 42000,
-                $params["path"], $params["domain"],
-                $params["secure"], $params["httponly"]
-            );
-        }
-        @session_destroy();
-
-        if (!headers_sent()) {
-            header('Location: index.php?reason=inactivity');
-            exit();
-        }
-    }
-    
-    // Update last activity time
-    $_SESSION['last_activity'] = time();
-
-    if (!empty($_SESSION['must_change_password'])) {
-        $current_script = basename($_SERVER['SCRIPT_NAME']);
-        $exempt_scripts = ['changePassword.php', 'updates.php', 'logout.php', 'index.php'];
-        if (!in_array($current_script, $exempt_scripts, true)) {
-            header('Location: changePassword');
-            exit();
-        }
+if (session_status() === PHP_SESSION_ACTIVE && !empty($_SESSION['username']) && !empty($_SESSION['must_change_password'])) {
+    $current_script = basename($_SERVER['SCRIPT_NAME']);
+    $exempt_scripts = ['changePassword.php', 'updates.php', 'logout.php', 'index.php'];
+    if (!in_array($current_script, $exempt_scripts, true)) {
+        header('Location: changePassword');
+        exit();
     }
 }
 
