@@ -30,43 +30,55 @@ if (!mysqli_set_charset($conn, "utf8mb4")) {
     exit();
 }
 
-// Self-healing: ensure the forced-password-change flag column exists.
-$check_mcp_col = mysqli_query($conn, "SHOW COLUMNS FROM tbl_users LIKE 'must_change_password'");
-if ($check_mcp_col && mysqli_num_rows($check_mcp_col) == 0) {
-    mysqli_query($conn, "ALTER TABLE tbl_users ADD must_change_password TINYINT(1) NOT NULL DEFAULT 0");
-}
-
-// Self-healing: ensure tbl_audit_logs table exists
-$check_audit_table = mysqli_query($conn, "SHOW TABLES LIKE 'tbl_audit_logs'");
-if ($check_audit_table && mysqli_num_rows($check_audit_table) == 0) {
-    $create_audit_table_sql = "CREATE TABLE IF NOT EXISTS tbl_audit_logs (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id VARCHAR(100) NOT NULL,
-        username VARCHAR(100) NOT NULL,
-        user_role VARCHAR(50) NOT NULL,
-        action VARCHAR(100) NOT NULL,
-        details TEXT DEFAULT NULL,
-        ip_address VARCHAR(45) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        INDEX (user_id),
-        INDEX (action),
-        INDEX (created_at)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
-    mysqli_query($conn, $create_audit_table_sql);
-}
-
-// Self-healing: ensure card_status column exists in tbl_emppersonal and tbl_printed_cards
-$check_card_status_emp = mysqli_query($conn, "SHOW COLUMNS FROM tbl_emppersonal LIKE 'card_status'");
-if ($check_card_status_emp && mysqli_num_rows($check_card_status_emp) == 0) {
-    mysqli_query($conn, "ALTER TABLE tbl_emppersonal ADD card_status VARCHAR(50) NOT NULL DEFAULT 'Pending Printing'");
-}
-
-$check_card_status_print = mysqli_query($conn, "SHOW TABLES LIKE 'tbl_printed_cards'");
-if ($check_card_status_print && mysqli_num_rows($check_card_status_print) > 0) {
-    $check_cs = mysqli_query($conn, "SHOW COLUMNS FROM tbl_printed_cards LIKE 'card_status'");
-    if ($check_cs && mysqli_num_rows($check_cs) == 0) {
-        mysqli_query($conn, "ALTER TABLE tbl_printed_cards ADD card_status VARCHAR(50) NOT NULL DEFAULT 'Printed'");
+// Self-healing table/column checks (wrapped safely to prevent exceptions on empty DBs)
+try {
+    // Check if tbl_users exists before inspecting its columns
+    $check_tbl_users = @mysqli_query($conn, "SHOW TABLES LIKE 'tbl_users'");
+    if ($check_tbl_users && mysqli_num_rows($check_tbl_users) > 0) {
+        $check_mcp_col = @mysqli_query($conn, "SHOW COLUMNS FROM tbl_users LIKE 'must_change_password'");
+        if ($check_mcp_col && mysqli_num_rows($check_mcp_col) == 0) {
+            @mysqli_query($conn, "ALTER TABLE tbl_users ADD must_change_password TINYINT(1) NOT NULL DEFAULT 0");
+        }
     }
+
+    // Ensure tbl_audit_logs table exists
+    $check_audit_table = @mysqli_query($conn, "SHOW TABLES LIKE 'tbl_audit_logs'");
+    if ($check_audit_table && mysqli_num_rows($check_audit_table) == 0) {
+        $create_audit_table_sql = "CREATE TABLE IF NOT EXISTS tbl_audit_logs (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id VARCHAR(100) NOT NULL,
+            username VARCHAR(100) NOT NULL,
+            user_role VARCHAR(50) NOT NULL,
+            action VARCHAR(100) NOT NULL,
+            details TEXT DEFAULT NULL,
+            ip_address VARCHAR(45) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX (user_id),
+            INDEX (action),
+            INDEX (created_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+        @mysqli_query($conn, $create_audit_table_sql);
+    }
+
+    // Check if tbl_emppersonal exists before inspecting card_status
+    $check_tbl_emp = @mysqli_query($conn, "SHOW TABLES LIKE 'tbl_emppersonal'");
+    if ($check_tbl_emp && mysqli_num_rows($check_tbl_emp) > 0) {
+        $check_card_status_emp = @mysqli_query($conn, "SHOW COLUMNS FROM tbl_emppersonal LIKE 'card_status'");
+        if ($check_card_status_emp && mysqli_num_rows($check_card_status_emp) == 0) {
+            @mysqli_query($conn, "ALTER TABLE tbl_emppersonal ADD card_status VARCHAR(50) NOT NULL DEFAULT 'Pending Printing'");
+        }
+    }
+
+    // Check if tbl_printed_cards exists
+    $check_card_status_print = @mysqli_query($conn, "SHOW TABLES LIKE 'tbl_printed_cards'");
+    if ($check_card_status_print && mysqli_num_rows($check_card_status_print) > 0) {
+        $check_cs = @mysqli_query($conn, "SHOW COLUMNS FROM tbl_printed_cards LIKE 'card_status'");
+        if ($check_cs && mysqli_num_rows($check_cs) == 0) {
+            @mysqli_query($conn, "ALTER TABLE tbl_printed_cards ADD card_status VARCHAR(50) NOT NULL DEFAULT 'Printed'");
+        }
+    }
+} catch (Throwable $e) {
+    // Silently ignore schema checks if tables do not exist yet
 }
 
 
