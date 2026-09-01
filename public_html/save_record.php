@@ -112,8 +112,8 @@ try {
     // Start transaction
     mysqli_begin_transaction($conn);
     
-    // Personal Info Insertion (named columns for safety and card_status tracking)
-    $insertion = "INSERT INTO tbl_emppersonal (
+    // 1. Personal Info Insertion
+    $q1 = mysqli_query($conn, "INSERT INTO tbl_emppersonal (
         serviceNo, surname, firstName, middleName, dob, marital_status, maiden_name,
         gender, state_of_origin, town, lga, bloodType, genotype, email, phone,
         user_id, date_of_entry, card_status
@@ -121,42 +121,72 @@ try {
         '$NISNo', '$surname', '$firstName', '$middleName', '$dob', '$maritalStatus', '$maidenName',
         '$gender', '$state', '$town', '$lga', '$bloodType', '$genotype', '$email', '$phone',
         '$user_id', '$date_of_entry', 'Pending Printing'
-    )";
-
-
-    // Execute all queries
-    $queries = [];
-    $queries[] = mysqli_query($conn, $insertion);
-    // Named columns (rather than the previous bare VALUES(...) list) — tbl_employment
-    // has grown extra columns (disciplinary_status, promotion_eligibility, etc.) since
-    // this insert was written, and a positional VALUES list with too few values fails
-    // outright ("Column count doesn't match value count"), so every enrolment was
-    // silently failing before this fix. Columns not listed here just take their
-    // table defaults.
-    $queries[] = mysqli_query($conn, "INSERT INTO tbl_employment
-        (serviceNo, dofa, dopa, presentPosting, currentRank, empStatus, date_of_entry, directorate, unit, posting_other)
-        VALUES ('$NISNo', '$dofa', '$dopa', '$presentPosting', '$currentRank', 'Active', '$date_of_entry', '$directorate', '$unit', '$postingOther')");
-    $queries[] = mysqli_query($conn, "INSERT INTO tbl_qualification VALUES('', '$NISNo', '$qualification','$institution', '$certificateNo','$dateObtained', '$date_of_entry')");
-    $queries[] = mysqli_query($conn, "INSERT INTO tbl_nok VALUES('', '$NISNo', '$nok','$nok_relationship','$nok_phone', '$date_of_entry')");
-    $queries[] = mysqli_query($conn, "INSERT INTO tbl_finance VALUES('', '$NISNo', '$ippis', '$bank','$account_number','$pfa', '$rsa','$nhf','$date_of_entry')");
-
-    // Check for any query failures
-    $failed = false;
-    foreach ($queries as $query) {
-        if (!$query) {
-            $failed = true;
-            break;
-        }
-    }
-    
-    if ($failed) {
+    )");
+    if (!$q1) {
+        $err = mysqli_error($conn);
         mysqli_rollback($conn);
-        $response['message'] = 'Failed to save record: ' . mysqli_error($conn);
-        echo json_encode($response);
+        error_log("Enrolment Error (tbl_emppersonal): " . $err);
+        echo json_encode(['success' => false, 'message' => 'Personal Info Save Failed: ' . $err, 'type' => 'error']);
         exit;
     }
-    
-    // Commit transaction
+
+    // 2. Employment Info Insertion (Explicit named columns)
+    $q2 = mysqli_query($conn, "INSERT INTO tbl_employment (
+        serviceNo, dofa, dopa, presentPosting, currentRank, empStatus, date_of_entry, directorate, unit, posting_other
+    ) VALUES (
+        '$NISNo', '$dofa', '$dopa', '$presentPosting', '$currentRank', 'Active', '$date_of_entry', '$directorate', '$unit', '$postingOther'
+    )");
+    if (!$q2) {
+        $err = mysqli_error($conn);
+        mysqli_rollback($conn);
+        error_log("Enrolment Error (tbl_employment): " . $err);
+        echo json_encode(['success' => false, 'message' => 'Employment Info Save Failed: ' . $err, 'type' => 'error']);
+        exit;
+    }
+
+    // 3. Qualification Info Insertion (Explicit named columns - omitting auto-increment id)
+    $q3 = mysqli_query($conn, "INSERT INTO tbl_qualification (
+        serviceNo, qualification, institution, certificateNo, dateObtained, date_of_entry
+    ) VALUES (
+        '$NISNo', '$qualification', '$institution', '$certificateNo', '$dateObtained', '$date_of_entry'
+    )");
+    if (!$q3) {
+        $err = mysqli_error($conn);
+        mysqli_rollback($conn);
+        error_log("Enrolment Error (tbl_qualification): " . $err);
+        echo json_encode(['success' => false, 'message' => 'Qualification Info Save Failed: ' . $err, 'type' => 'error']);
+        exit;
+    }
+
+    // 4. Next of Kin Insertion (Explicit named columns - omitting auto-increment id)
+    $q4 = mysqli_query($conn, "INSERT INTO tbl_nok (
+        serviceNo, nok, nok_relationship, nok_phone, date_of_entry
+    ) VALUES (
+        '$NISNo', '$nok', '$nok_relationship', '$nok_phone', '$date_of_entry'
+    )");
+    if (!$q4) {
+        $err = mysqli_error($conn);
+        mysqli_rollback($conn);
+        error_log("Enrolment Error (tbl_nok): " . $err);
+        echo json_encode(['success' => false, 'message' => 'Next of Kin Save Failed: ' . $err, 'type' => 'error']);
+        exit;
+    }
+
+    // 5. Finance Details Insertion (Explicit named columns - omitting auto-increment id)
+    $q5 = mysqli_query($conn, "INSERT INTO tbl_finance (
+        serviceNo, ippis, bank, account_number, pfa, rsa, nhf, date_of_entry
+    ) VALUES (
+        '$NISNo', '$ippis', '$bank', '$account_number', '$pfa', '$rsa', '$nhf', '$date_of_entry'
+    )");
+    if (!$q5) {
+        $err = mysqli_error($conn);
+        mysqli_rollback($conn);
+        error_log("Enrolment Error (tbl_finance): " . $err);
+        echo json_encode(['success' => false, 'message' => 'Banking/Finance Save Failed: ' . $err, 'type' => 'error']);
+        exit;
+    }
+
+    // Commit transaction when all queries pass
     mysqli_commit($conn);
     
     // Audit Log Entry

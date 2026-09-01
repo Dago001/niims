@@ -1260,30 +1260,44 @@ include 'top-navigation.php';
                     contentType: false,
                     success: function(response) {
                         console.log("Response from server:", response);
-                        
-                        // Close loading dialog
                         Swal.close();
                         
-                        // Simple check - if we got here, assume success
-                        // Since you said data is saving to database
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Record Saved Successfully!',
-                            html: '<strong>Employee record has been saved.</strong><br><br>' +
-                                  '',
-                            confirmButtonColor: '#0e7a2e',
-                            confirmButtonText: 'OK'
-                        }).then((result) => {
-                            // Always redirect to myenrolments.php
-                            window.location.href = 'myenrolments';
-                        });
+                        var res = response;
+                        if (typeof response === 'string') {
+                            try {
+                                res = JSON.parse(response);
+                            } catch(e) {
+                                res = { success: false, message: response };
+                            }
+                        }
+                        
+                        if (res && res.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Record Saved Successfully!',
+                                html: '<strong>Employee record has been saved.</strong>',
+                                confirmButtonColor: '#0e7a2e',
+                                confirmButtonText: 'OK'
+                            }).then((result) => {
+                                window.location.href = 'myenrolments.php';
+                            });
+                        } else {
+                            var errMsg = (res && res.message) ? res.message : 'Database save failed.';
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Save Failed',
+                                html: '<strong>' + errMsg + '</strong><br><br><small>The record was not saved to the database. Please check the error above.</small>',
+                                confirmButtonColor: '#d33',
+                                confirmButtonText: 'OK'
+                            });
+                        }
                     },
                     error: function(xhr, status, error) {
+                        Swal.close();
                         Swal.fire({
                             icon: 'error',
-                            title: 'Error',
-                            html: 'Failed to save record.<br><br>' +
-                                  '<small>Error: ' + error + '</small>',
+                            title: 'Server Error',
+                            html: 'Failed to save record.<br><br><small>Error: ' + error + '</small>',
                             confirmButtonColor: '#d33',
                         });
                     }
