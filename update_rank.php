@@ -8,13 +8,25 @@ if (!isset($_SESSION['username'])) {
 
 require_once('db/db.php');
 
-// Include appropriate sidebar based on role
-if ($_SESSION['role'] == "Admin") {
-    include 'sidebar-admin.php';
-}
+// Robust case-insensitive sidebar inclusion with fallback for Linux production environments
+$user_role_clean = strtolower(trim($_SESSION['role'] ?? ''));
 
-if ($_SESSION['role'] == "Supervisor") {
+if ($user_role_clean === 'superadmin' || $user_role_clean === 'super_admin' || $user_role_clean === 'super admin') {
+    include 'sidebar-superadmin.php';
+} elseif ($user_role_clean === 'admin') {
+    include 'sidebar-admin.php';
+} elseif ($user_role_clean === 'supervisor') {
     include 'sidebar-supervisor.php';
+} elseif ($user_role_clean === 'dataentry' || $user_role_clean === 'data_entry' || $user_role_clean === 'data entry') {
+    include 'sidebar-dataentry.php';
+} elseif ($user_role_clean === 'report' || $user_role_clean === 'view') {
+    include 'sidebar-view.php';
+} elseif ($user_role_clean === 'cgi') {
+    include 'sidebar-cgi.php';
+} elseif (file_exists('sidebar-admin.php')) {
+    include 'sidebar-admin.php';
+} else {
+    include 'sidebar.php';
 }
 
 include 'menu-footer-buttons.php';
@@ -124,17 +136,7 @@ $retrieve = mysqli_stmt_get_result($stmt);
 $numb = $retrieve ? mysqli_num_rows($retrieve) : 0;
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Card Production - Enrolled Personnel</title>
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
+<style>
         /* Loading indicator */
         .loading-spinner {
             display: none;
@@ -668,8 +670,6 @@ $numb = $retrieve ? mysqli_num_rows($retrieve) : 0;
             }
         }
     </style>
-</head>
-<body>
     <!-- Loading Overlay -->
     <div class="overlay" id="overlay"></div>
     
