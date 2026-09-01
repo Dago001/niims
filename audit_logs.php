@@ -40,9 +40,24 @@ if ($user_role_clean === 'superadmin' || $user_role_clean === 'super_admin' || $
 include 'menu-footer-buttons.php';
 include 'top-navigation.php';
 
-// Fetch audit logs
-$query = "SELECT * FROM tbl_audit_logs ORDER BY id DESC LIMIT 2000";
-$result = mysqli_query($conn, $query);
+// Fetch audit logs with global search support
+$search_query = isset($_GET['search']) ? trim($_GET['search']) : '';
+if (!empty($search_query)) {
+    // Query entire audit table when a specific search term is supplied
+    $query = "SELECT * FROM tbl_audit_logs 
+              WHERE user_id LIKE ? OR username LIKE ? OR user_role LIKE ? OR action LIKE ? OR details LIKE ? OR ip_address LIKE ? 
+              ORDER BY id DESC";
+    $stmt = mysqli_prepare($conn, $query);
+    $param = '%' . $search_query . '%';
+    mysqli_stmt_bind_param($stmt, 'ssssss', $param, $param, $param, $param, $param, $param);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+} else {
+    // Default fetch up to 5000 records so DataTables breaks into 30 entries per page
+    $query = "SELECT * FROM tbl_audit_logs ORDER BY id DESC LIMIT 5000";
+    $result = mysqli_query($conn, $query);
+}
+
 ?>
 
 <style>
@@ -123,17 +138,23 @@ $result = mysqli_query($conn, $query);
                         <!-- Search Bar -->
                         <div class="row" style="margin-bottom: 15px;">
                             <div class="col-md-6 col-sm-8 col-xs-12">
-                                <label for="custom-audit-search" style="font-size: 13px; font-weight: 600; color: #333; margin-bottom: 5px;">
-                                    <i class="fa fa-search"></i> Search Audit Logs:
-                                </label>
-                                <div class="input-group">
-                                    <input type="text" id="custom-audit-search" class="form-control" placeholder="Search by Service No, Username, Action, IP, or details...">
-                                    <span class="input-group-btn">
-                                        <button class="btn btn-primary" type="button" id="btn-search-trigger"><i class="fa fa-search"></i> Search</button>
-                                    </span>
-                                </div>
+                                <form method="GET" action="audit_logs.php" id="auditSearchForm">
+                                    <label for="custom-audit-search" style="font-size: 13px; font-weight: 600; color: #333; margin-bottom: 5px;">
+                                        <i class="fa fa-search"></i> Search Audit Logs (Global Database Search):
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="text" name="search" id="custom-audit-search" class="form-control" placeholder="Search by Service No, Username, Action, IP, or details..." value="<?php echo htmlspecialchars($search_query); ?>">
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-primary" type="submit" id="btn-search-trigger"><i class="fa fa-search"></i> Search</button>
+                                            <?php if (!empty($search_query)): ?>
+                                                <a href="audit_logs.php" class="btn btn-default" title="Reset Search"><i class="fa fa-times"></i> Reset</a>
+                                            <?php endif; ?>
+                                        </span>
+                                    </div>
+                                </form>
                             </div>
                         </div>
+
 
                         <div class="table-responsive" style="width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 15px;">
                             <table id="datatable-audit" class="table table-striped table-bordered dt-responsive nowrap" cellspacing="0" width="100%">
@@ -211,8 +232,8 @@ $result = mysqli_query($conn, $query);
 $(document).ready(function() {
     var table = $('#datatable-audit').DataTable({
         dom: 'Blfrtip',
-        pageLength: 50,
-        lengthMenu: [[10, 25, 50, 100, 250, -1], [10, 25, 50, 100, 250, "All"]],
+        pageLength: 30,
+        lengthMenu: [[10, 25, 30, 50, 100, 250, -1], [10, 25, 30, 50, 100, 250, "All"]],
         order: [[0, 'asc']],
         language: {
             search: "Filter: ",
