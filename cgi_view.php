@@ -39,25 +39,91 @@ $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $records_per_page = 50;
 $offset = ($page - 1) * $records_per_page;
 
-// SEARCH FUNCTIONALITY with prepared statements
-$search_query = isset($_GET['search']) ? trim($_GET['search']) : '';
-$search_condition = '';
+// MULTI-COLUMN FILTER & SEARCH FUNCTIONALITY with prepared statements
+$filter_service_no  = isset($_GET['service_no']) ? trim($_GET['service_no']) : '';
+$filter_surname     = isset($_GET['surname']) ? trim($_GET['surname']) : '';
+$filter_first_name  = isset($_GET['first_name']) ? trim($_GET['first_name']) : '';
+$filter_middle_name = isset($_GET['middle_name']) ? trim($_GET['middle_name']) : '';
+$filter_rank        = isset($_GET['rank']) ? trim($_GET['rank']) : '';
+$filter_posting     = isset($_GET['posting']) ? trim($_GET['posting']) : '';
+$filter_phone       = isset($_GET['phone']) ? trim($_GET['phone']) : '';
+$search_query       = isset($_GET['search']) ? trim($_GET['search']) : '';
+
+$where_clauses = [];
 $search_params = [];
 $param_types = '';
 
-if (!empty($search_query)) {
-    $search_condition = "WHERE (emp.serviceNo LIKE ? OR 
-                               emp.surname LIKE ? OR 
-                               emp.firstName LIKE ? OR 
-                               emp.middleName LIKE ? OR 
-                               emp.phone LIKE ? OR
-                               emp2.currentRank LIKE ? OR
-                               emp2.presentPosting LIKE ? OR
-                               emp.bloodType LIKE ?)";
-    $search_param = "%" . $search_query . "%";
-    $search_params = array_fill(0, 8, $search_param);
-    $param_types = str_repeat('s', count($search_params));
+if (!empty($filter_service_no)) {
+    $where_clauses[] = "emp.serviceNo LIKE ?";
+    $search_params[] = "%" . $filter_service_no . "%";
+    $param_types .= 's';
 }
+
+if (!empty($filter_surname)) {
+    $where_clauses[] = "emp.surname LIKE ?";
+    $search_params[] = "%" . $filter_surname . "%";
+    $param_types .= 's';
+}
+
+if (!empty($filter_first_name)) {
+    $where_clauses[] = "emp.firstName LIKE ?";
+    $search_params[] = "%" . $filter_first_name . "%";
+    $param_types .= 's';
+}
+
+if (!empty($filter_middle_name)) {
+    $where_clauses[] = "emp.middleName LIKE ?";
+    $search_params[] = "%" . $filter_middle_name . "%";
+    $param_types .= 's';
+}
+
+if (!empty($filter_rank)) {
+    $where_clauses[] = "emp2.currentRank = ?";
+    $search_params[] = $filter_rank;
+    $param_types .= 's';
+}
+
+if (!empty($filter_posting)) {
+    $where_clauses[] = "(emp2.presentPosting LIKE ? OR emp2.directorate LIKE ? OR emp2.unit LIKE ? OR emp2.posting_other LIKE ?)";
+    $search_params[] = "%" . $filter_posting . "%";
+    $search_params[] = "%" . $filter_posting . "%";
+    $search_params[] = "%" . $filter_posting . "%";
+    $search_params[] = "%" . $filter_posting . "%";
+    $param_types .= 'ssss';
+}
+
+if (!empty($filter_phone)) {
+    $where_clauses[] = "emp.phone LIKE ?";
+    $search_params[] = "%" . $filter_phone . "%";
+    $param_types .= 's';
+}
+
+if (!empty($search_query)) {
+    $where_clauses[] = "(emp.serviceNo LIKE ? OR 
+                         emp.surname LIKE ? OR 
+                         emp.firstName LIKE ? OR 
+                         emp.middleName LIKE ? OR 
+                         emp.phone LIKE ? OR
+                         emp2.currentRank LIKE ? OR
+                         emp2.presentPosting LIKE ? OR
+                         emp.bloodType LIKE ?)";
+    for ($i = 0; $i < 8; $i++) {
+        $search_params[] = "%" . $search_query . "%";
+        $param_types .= 's';
+    }
+}
+
+$search_condition = '';
+if (!empty($where_clauses)) {
+    $search_condition = "WHERE " . implode(" AND ", $where_clauses);
+}
+
+// Build query string helper for pagination
+$get_params = $_GET;
+unset($get_params['page']);
+$base_query_string = http_build_query($get_params);
+$page_link_prefix = 'cgi_view.php?' . ($base_query_string ? $base_query_string . '&' : '') . 'page=';
+
 
 // Get total count for pagination
 $count_sql = "SELECT COUNT(DISTINCT emp.serviceNo) as total 
@@ -743,48 +809,92 @@ $numb = $retrieve ? mysqli_num_rows($retrieve) : 0;
             </div>
             <div class="clearfix"></div>
             
-            <!-- SEARCH SECTION -->
+            <!-- MULTI-COLUMN FILTER SECTION -->
             <div class="search-section">
-                <div class="search-header">
-                    
-                    
-                    <form method="GET" action="cgi_view" class="search-form" id="searchForm">
-                        <div class="search-input-container">
-                            <input type="text" 
-                                   class="search-input" 
-                                   name="search" 
-                                   id="searchInput"
-                                   placeholder="Search by Service No, Name, Phone, Rank, Posting, or Blood Type..."
-                                   value="<?php echo htmlspecialchars($search_query); ?>"
-                                   autocomplete="off"
-                                   aria-label="Search personnel records">
-                            <i class="fas fa-search search-icon"></i>
+                <form method="GET" action="cgi_view.php" class="filter-form" id="searchForm">
+                    <div class="row" style="margin-bottom: 5px;">
+                        <div class="col-md-3 col-sm-6 col-xs-12" style="margin-bottom: 10px;">
+                            <label style="font-size: 12px; font-weight: 600; color: #2c3e50;">Service No.</label>
+                            <input type="text" name="service_no" class="form-control input-sm" placeholder="Service No..." value="<?php echo htmlspecialchars($filter_service_no); ?>">
                         </div>
-                        
-                        <button type="submit" class="search-btn">
-                            <i class="fas fa-search"></i> Search
-                        </button>
-                        
-                        <?php if (!empty($search_query)): ?>
-                            <a href="cgi_view" class="clear-btn">
-                                <i class="fas fa-times"></i> Clear Search
+                        <div class="col-md-3 col-sm-6 col-xs-12" style="margin-bottom: 10px;">
+                            <label style="font-size: 12px; font-weight: 600; color: #2c3e50;">Surname</label>
+                            <input type="text" name="surname" class="form-control input-sm" placeholder="Surname..." value="<?php echo htmlspecialchars($filter_surname); ?>">
+                        </div>
+                        <div class="col-md-3 col-sm-6 col-xs-12" style="margin-bottom: 10px;">
+                            <label style="font-size: 12px; font-weight: 600; color: #2c3e50;">First Name</label>
+                            <input type="text" name="first_name" class="form-control input-sm" placeholder="First Name..." value="<?php echo htmlspecialchars($filter_first_name); ?>">
+                        </div>
+                        <div class="col-md-3 col-sm-6 col-xs-12" style="margin-bottom: 10px;">
+                            <label style="font-size: 12px; font-weight: 600; color: #2c3e50;">Middle Name</label>
+                            <input type="text" name="middle_name" class="form-control input-sm" placeholder="Middle Name..." value="<?php echo htmlspecialchars($filter_middle_name); ?>">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-3 col-sm-6 col-xs-12" style="margin-bottom: 10px;">
+                            <label style="font-size: 12px; font-weight: 600; color: #2c3e50;">Rank</label>
+                            <select name="rank" class="form-control input-sm">
+                                <option value="">All Ranks</option>
+                                <?php
+                                $ranks_list = [
+                                    'Comptroller General', 'Dep. Comptroller General', 'Asst. Comptroller General',
+                                    'Comptroller', 'Deputy Comptroller', 'Assistant Comptroller',
+                                    'Chief Superintendent', 'Superintendent', 'Deputy Superintendent',
+                                    'Asst. Superintendent 1', 'Asst. Superintendent 2', 'Inspector',
+                                    'Assistant Inspector', 'Chief Immigration Asst.', 'Senior Immigration Asst.',
+                                    'Immigration Asst. 1', 'Immigration Asst. 2', 'Immigration Asst. 3'
+                                ];
+                                foreach ($ranks_list as $r) {
+                                    $selected = ($filter_rank === $r) ? 'selected' : '';
+                                    echo '<option value="' . htmlspecialchars($r) . '" ' . $selected . '>' . htmlspecialchars($r) . '</option>';
+                                }
+                                ?>
+                            </select>
+                        </div>
+                        <div class="col-md-3 col-sm-6 col-xs-12" style="margin-bottom: 10px;">
+                            <label style="font-size: 12px; font-weight: 600; color: #2c3e50;">Current Posting</label>
+                            <input type="text" name="posting" class="form-control input-sm" placeholder="Posting Command/Unit..." value="<?php echo htmlspecialchars($filter_posting); ?>">
+                        </div>
+                        <div class="col-md-3 col-sm-6 col-xs-12" style="margin-bottom: 10px;">
+                            <label style="font-size: 12px; font-weight: 600; color: #2c3e50;">Phone No.</label>
+                            <input type="text" name="phone" class="form-control input-sm" placeholder="Phone No..." value="<?php echo htmlspecialchars($filter_phone); ?>">
+                        </div>
+                        <div class="col-md-3 col-sm-6 col-xs-12" style="margin-bottom: 10px; display: flex; align-items: flex-end; gap: 6px;">
+                            <button type="submit" class="search-btn" style="flex: 1; height: 30px; padding: 0 10px; font-size: 12px; justify-content: center;">
+                                <i class="fas fa-filter"></i> Filter
+                            </button>
+                            <a href="cgi_view.php" class="clear-btn" style="height: 30px; padding: 0 10px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-redo"></i> Reset
                             </a>
-                        <?php endif; ?>
-                    </form>
-                </div>
-                
-                
+                        </div>
+                    </div>
+                </form>
             </div>
             
-            <!-- Search Results Info -->
-            <?php if (!empty($search_query)): ?>
+            <!-- Search / Filter Results Info -->
+            <?php 
+            $active_filter_parts = [];
+            if (!empty($filter_service_no)) $active_filter_parts[] = 'Service No: <strong>' . htmlspecialchars($filter_service_no) . '</strong>';
+            if (!empty($filter_surname)) $active_filter_parts[] = 'Surname: <strong>' . htmlspecialchars($filter_surname) . '</strong>';
+            if (!empty($filter_first_name)) $active_filter_parts[] = 'First Name: <strong>' . htmlspecialchars($filter_first_name) . '</strong>';
+            if (!empty($filter_middle_name)) $active_filter_parts[] = 'Middle Name: <strong>' . htmlspecialchars($filter_middle_name) . '</strong>';
+            if (!empty($filter_rank)) $active_filter_parts[] = 'Rank: <strong>' . htmlspecialchars($filter_rank) . '</strong>';
+            if (!empty($filter_posting)) $active_filter_parts[] = 'Posting: <strong>' . htmlspecialchars($filter_posting) . '</strong>';
+            if (!empty($filter_phone)) $active_filter_parts[] = 'Phone: <strong>' . htmlspecialchars($filter_phone) . '</strong>';
+            if (!empty($search_query)) $active_filter_parts[] = 'Search: <strong>' . htmlspecialchars($search_query) . '</strong>';
+            ?>
+            
+            <?php if (!empty($active_filter_parts)): ?>
             <div class="search-results-info">
                 <p>
                     <i class="fas fa-info-circle"></i>
-                    Search results for: <strong>"<?php echo htmlspecialchars($search_query); ?>"</strong>
-                    (<?php echo number_format($total_records); ?> records found)
+                    Filtered Records: <?php echo implode(', ', $active_filter_parts); ?>
+                    (<strong><?php echo number_format($total_records); ?></strong> found)
                 </p>
-                
+                <a href="cgi_view.php" class="clear-btn" style="padding: 4px 10px; font-size: 12px;">
+                    <i class="fas fa-times"></i> Clear Filters
+                </a>
             </div>
             <?php endif; ?>
             
@@ -959,11 +1069,11 @@ $numb = $retrieve ? mysqli_num_rows($retrieve) : 0;
                         <?php if ($total_pages > 1): ?>
                         <div class="pagination">
                             <?php if ($page > 1): ?>
-                                <a href="cgi_view?page=1<?php echo !empty($search_query) ? '&search=' . urlencode($search_query) : ''; ?>" 
+                                <a href="<?php echo $page_link_prefix . '1'; ?>" 
                                    class="page-link" title="First Page">
                                     <i class="fas fa-angle-double-left"></i> First
                                 </a>
-                                <a href="cgi_view?page=<?php echo $page - 1; ?><?php echo !empty($search_query) ? '&search=' . urlencode($search_query) : ''; ?>" 
+                                <a href="<?php echo $page_link_prefix . ($page - 1); ?>" 
                                    class="page-link" title="Previous Page">
                                     <i class="fas fa-angle-left"></i> Prev
                                 </a>
@@ -983,8 +1093,7 @@ $numb = $retrieve ? mysqli_num_rows($retrieve) : 0;
                             
                             // Show first page if not in range
                             if ($startPage > 1) {
-                                echo '<a href="cgi_view?page=1' . (!empty($search_query) ? '&search=' . urlencode($search_query) : '') . '" 
-                                      class="page-link" title="Page 1">1</a>';
+                                echo '<a href="' . $page_link_prefix . '1" class="page-link" title="Page 1">1</a>';
                                 if ($startPage > 2) {
                                     echo '<span class="page-link disabled">...</span>';
                                 }
@@ -992,7 +1101,7 @@ $numb = $retrieve ? mysqli_num_rows($retrieve) : 0;
                             
                             for ($i = $startPage; $i <= $endPage; $i++):
                             ?>
-                                <a href="cgi_view?page=<?php echo $i; ?><?php echo !empty($search_query) ? '&search=' . urlencode($search_query) : ''; ?>" 
+                                <a href="<?php echo $page_link_prefix . $i; ?>" 
                                    class="page-link <?php echo $i == $page ? 'active' : ''; ?>"
                                    title="Page <?php echo $i; ?>">
                                     <?php echo $i; ?>
@@ -1005,17 +1114,16 @@ $numb = $retrieve ? mysqli_num_rows($retrieve) : 0;
                                 if ($endPage < $total_pages - 1) {
                                     echo '<span class="page-link disabled">...</span>';
                                 }
-                                echo '<a href="cgi_view?page=' . $total_pages . (!empty($search_query) ? '&search=' . urlencode($search_query) : '') . '" 
-                                      class="page-link" title="Page ' . $total_pages . '">' . $total_pages . '</a>';
+                                echo '<a href="' . $page_link_prefix . $total_pages . '" class="page-link" title="Page ' . $total_pages . '">' . $total_pages . '</a>';
                             }
                             ?>
                             
                             <?php if ($page < $total_pages): ?>
-                                <a href="cgi_view?page=<?php echo $page + 1; ?><?php echo !empty($search_query) ? '&search=' . urlencode($search_query) : ''; ?>" 
+                                <a href="<?php echo $page_link_prefix . ($page + 1); ?>" 
                                    class="page-link" title="Next Page">
                                     Next <i class="fas fa-angle-right"></i>
                                 </a>
-                                <a href="cgi_view?page=<?php echo $total_pages; ?><?php echo !empty($search_query) ? '&search=' . urlencode($search_query) : ''; ?>" 
+                                <a href="<?php echo $page_link_prefix . $total_pages; ?>" 
                                    class="page-link" title="Last Page">
                                     Last <i class="fas fa-angle-double-right"></i>
                                 </a>
@@ -1031,7 +1139,7 @@ $numb = $retrieve ? mysqli_num_rows($retrieve) : 0;
                         
                         <!-- Jump to page -->
                         <div style="text-align: center; margin-top: 15px;">
-                            <form method="GET" action="cgi_view" style="display: inline-block;">
+                            <form method="GET" action="cgi_view.php" style="display: inline-block;">
                                 <div style="display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap;">
                                     <span style="font-size: 14px; color: #666; font-weight: 500;">Go to page:</span>
                                     <input type="number" 
@@ -1041,9 +1149,11 @@ $numb = $retrieve ? mysqli_num_rows($retrieve) : 0;
                                            value="<?php echo $page; ?>" 
                                            style="width: 70px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; text-align: center;"
                                            onchange="this.value = Math.max(1, Math.min(<?php echo $total_pages; ?>, parseInt(this.value) || 1))">
-                                    <?php if (!empty($search_query)): ?>
-                                        <input type="hidden" name="search" value="<?php echo htmlspecialchars($search_query); ?>">
-                                    <?php endif; ?>
+                                    <?php foreach ($_GET as $key => $val): ?>
+                                        <?php if ($key !== 'page' && !empty($val)): ?>
+                                            <input type="hidden" name="<?php echo htmlspecialchars($key); ?>" value="<?php echo htmlspecialchars($val); ?>">
+                                        <?php endif; ?>
+                                    <?php endforeach; ?>
                                     <button type="submit" 
                                             style="padding: 8px 20px; background: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 5px;">
                                         <i class="fas fa-arrow-right"></i> Go
