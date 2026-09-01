@@ -927,6 +927,14 @@ if (empty($_SESSION['csrf_token'])) {
                             <!-- CSRF Token -->
                             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
                             
+                            <!-- Inactivity Logout Alert Display -->
+                            <?php if (isset($_GET['reason']) && $_GET['reason'] === 'inactivity'): ?>
+                            <div class="inactive-alert" id="inactivityAlert" style="margin-bottom: 15px;">
+                                <i class="fa fa-clock-o"></i>
+                                <span>You were automatically logged out after 20 minutes of inactivity for security.</span>
+                            </div>
+                            <?php endif; ?>
+                            
                             <!-- Error Message Display -->
                             <?php if ($has_error && !empty($error_message)): ?>
                             <div class="<?php echo $inactive_account ? 'inactive-alert' : 'error-alert'; ?>" id="errorAlert">

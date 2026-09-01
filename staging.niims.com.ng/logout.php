@@ -2,15 +2,25 @@
 session_start();
 require_once('db/db.php');
 
+$reason = isset($_GET['reason']) ? trim($_GET['reason']) : '';
+
 if (!empty($_SESSION['username'])) {
-    log_activity($conn, 'USER_LOGOUT', 'User logged out');
+    if ($reason === 'inactivity') {
+        if (function_exists('log_activity')) {
+            log_activity($conn, 'AUTO_LOGOUT_INACTIVITY', 'User logged out automatically after 20 minutes of inactivity');
+        }
+    } else {
+        if (function_exists('log_activity')) {
+            log_activity($conn, 'USER_LOGOUT', 'User logged out');
+        }
+    }
 }
 
 // Clear all session variables
 $_SESSION = [];
 
 // Destroy the server-side session
-session_destroy();
+@session_destroy();
 
 // Expire the session cookie on the client side
 if (ini_get("session.use_cookies")) {
@@ -26,6 +36,7 @@ if (ini_get("session.use_cookies")) {
     );
 }
 
-header('Location: index');
+$redirect_target = ($reason === 'inactivity') ? 'index.php?reason=inactivity' : 'index.php';
+header('Location: ' . $redirect_target);
 exit();
 ?>

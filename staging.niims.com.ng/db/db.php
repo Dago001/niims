@@ -97,12 +97,49 @@ if ($check_card_status_print && mysqli_num_rows($check_card_status_print) > 0) {
 // matter which page they try to load. Guarded on an active session so
 // scripts that never call session_start() (ajax helpers, api.php) aren't
 // touched.
-if (session_status() === PHP_SESSION_ACTIVE && !empty($_SESSION['username']) && !empty($_SESSION['must_change_password'])) {
-    $current_script = basename($_SERVER['SCRIPT_NAME']);
-    $exempt_scripts = ['changePassword.php', 'updates.php', 'logout.php', 'index.php'];
-    if (!in_array($current_script, $exempt_scripts, true)) {
-        header('Location: changePassword');
-        exit();
+// Global enforcement: a user flagged for a mandatory password change is
+// redirected to changePassword on every request until they comply, no
+// matter which page they try to load. Guarded on an active session so
+// scripts that never call session_start() (ajax helpers, api.php) aren't
+// touched.
+if (session_status() === PHP_SESSION_ACTIVE && !empty($_SESSION['username'])) {
+    // 20-minute (1200 seconds) inactivity auto-logout
+    $inactivity_timeout = 1200;
+    
+    if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > $inactivity_timeout)) {
+        // Log auto-logout event
+        $username = $_SESSION['username'] ?? 'User';
+        if (function_exists('log_audit_event') && isset($conn) && $conn) {
+            log_audit_event($conn, 'AUTO_LOGOUT_INACTIVITY', "User {$username} logged out after 20 minutes of inactivity");
+        }
+
+        // Destroy session
+        $_SESSION = array();
+        if (ini_get("session.use_cookies")) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000,
+                $params["path"], $params["domain"],
+                $params["secure"], $params["httponly"]
+            );
+        }
+        @session_destroy();
+
+        if (!headers_sent()) {
+            header('Location: index.php?reason=inactivity');
+            exit();
+        }
+    }
+    
+    // Update last activity time
+    $_SESSION['last_activity'] = time();
+
+    if (!empty($_SESSION['must_change_password'])) {
+        $current_script = basename($_SERVER['SCRIPT_NAME']);
+        $exempt_scripts = ['changePassword.php', 'updates.php', 'logout.php', 'index.php'];
+        if (!in_array($current_script, $exempt_scripts, true)) {
+            header('Location: changePassword');
+            exit();
+        }
     }
 }
 

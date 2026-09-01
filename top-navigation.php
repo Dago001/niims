@@ -98,3 +98,26 @@
           </div>
         </div>
         <!-- /top navigation -->
+
+        <!-- Client-side 20-minute Inactivity Auto-Logout -->
+        <script>
+        (function() {
+            var idleTimer;
+            var TIMEOUT_MS = 20 * 60 * 1000; // 20 minutes in milliseconds
+
+            function resetIdleTimer() {
+                clearTimeout(idleTimer);
+                idleTimer = setTimeout(function() {
+                    window.location.href = 'logout.php?reason=inactivity';
+                }, TIMEOUT_MS);
+            }
+
+            // Bind user activity listeners
+            window.onload = resetIdleTimer;
+            document.onmousemove = resetIdleTimer;
+            document.onkeypress = resetIdleTimer;
+            document.onclick = resetIdleTimer;
+            document.onscroll = resetIdleTimer;
+            document.ontouchstart = resetIdleTimer;
+        })();
+        </script>
