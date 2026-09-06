@@ -91,6 +91,23 @@ if ($check_card_status_print && mysqli_num_rows($check_card_status_print) > 0) {
     }
 }
 
+// Self-healing: ensure directorate, unit, posting_other columns exist in tbl_employment
+$check_emp_tbl = mysqli_query($conn, "SHOW TABLES LIKE 'tbl_employment'");
+if ($check_emp_tbl && mysqli_num_rows($check_emp_tbl) > 0) {
+    $check_dir = mysqli_query($conn, "SHOW COLUMNS FROM tbl_employment LIKE 'directorate'");
+    if ($check_dir && mysqli_num_rows($check_dir) == 0) {
+        mysqli_query($conn, "ALTER TABLE tbl_employment ADD directorate VARCHAR(150) DEFAULT NULL");
+    }
+    $check_unit = mysqli_query($conn, "SHOW COLUMNS FROM tbl_employment LIKE 'unit'");
+    if ($check_unit && mysqli_num_rows($check_unit) == 0) {
+        mysqli_query($conn, "ALTER TABLE tbl_employment ADD unit VARCHAR(150) DEFAULT NULL");
+    }
+    $check_post = mysqli_query($conn, "SHOW COLUMNS FROM tbl_employment LIKE 'posting_other'");
+    if ($check_post && mysqli_num_rows($check_post) == 0) {
+        mysqli_query($conn, "ALTER TABLE tbl_employment ADD posting_other VARCHAR(255) DEFAULT NULL");
+    }
+}
+
 
 // Global enforcement: a user flagged for a mandatory password change is
 // redirected to changePassword on every request until they comply, no

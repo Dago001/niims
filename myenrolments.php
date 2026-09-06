@@ -70,24 +70,29 @@ if (!empty($search_condition)) {
 
 $count_stmt = mysqli_prepare($conn, $count_sql);
 
-if (!empty($search_params)) {
-    mysqli_stmt_bind_param($count_stmt, "i" . $param_types, $userid, ...$search_params);
-} else {
-    mysqli_stmt_bind_param($count_stmt, "i", $userid);
-}
+if ($count_stmt) {
+    if (!empty($search_params)) {
+        mysqli_stmt_bind_param($count_stmt, "s" . $param_types, $userid, ...$search_params);
+    } else {
+        mysqli_stmt_bind_param($count_stmt, "s", $userid);
+    }
 
-mysqli_stmt_execute($count_stmt);
-$count_result = mysqli_stmt_get_result($count_stmt);
+    mysqli_stmt_execute($count_stmt);
+    $count_result = mysqli_stmt_get_result($count_stmt);
 
-if ($count_result) {
-    $count_row = mysqli_fetch_array($count_result);
-    $total_records = $count_row['total'];
-    $total_pages = ceil($total_records / $records_per_page);
+    if ($count_result) {
+        $count_row = mysqli_fetch_array($count_result);
+        $total_records = $count_row['total'];
+        $total_pages = ceil($total_records / $records_per_page);
+    } else {
+        $total_records = 0;
+        $total_pages = 1;
+    }
+    mysqli_stmt_close($count_stmt);
 } else {
     $total_records = 0;
     $total_pages = 1;
 }
-mysqli_stmt_close($count_stmt);
 
 // Main query with pagination and search
 $sqluse = "SELECT DISTINCT emp.serviceNo, emp.surname, emp.firstName, emp.phone,
@@ -128,20 +133,25 @@ $sqluse .= " ORDER BY
 // Prepare and execute main query
 $stmt = mysqli_prepare($conn, $sqluse);
 
-if (!empty($search_params)) {
-    // Add pagination parameters
-    $search_params[] = $records_per_page;
-    $search_params[] = $offset;
-    $param_types .= 'ii'; // Add integer types for LIMIT and OFFSET
-    
-    mysqli_stmt_bind_param($stmt, "i" . $param_types, $userid, ...$search_params);
-} else {
-    mysqli_stmt_bind_param($stmt, "iii", $userid, $records_per_page, $offset);
-}
+if ($stmt) {
+    if (!empty($search_params)) {
+        // Add pagination parameters
+        $search_params[] = $records_per_page;
+        $search_params[] = $offset;
+        $param_types .= 'ii'; // Add integer types for LIMIT and OFFSET
+        
+        mysqli_stmt_bind_param($stmt, "s" . $param_types, $userid, ...$search_params);
+    } else {
+        mysqli_stmt_bind_param($stmt, "sii", $userid, $records_per_page, $offset);
+    }
 
-mysqli_stmt_execute($stmt);
-$retrieve = mysqli_stmt_get_result($stmt);
-$numb = $retrieve ? mysqli_num_rows($retrieve) : 0;
+    mysqli_stmt_execute($stmt);
+    $retrieve = mysqli_stmt_get_result($stmt);
+    $numb = $retrieve ? mysqli_num_rows($retrieve) : 0;
+} else {
+    $retrieve = false;
+    $numb = 0;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
