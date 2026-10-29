@@ -14,6 +14,10 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
+    # Redirect legacy domain (niims.com.ng) to official domain (niims.immigration.gov.ng)
+    RewriteCond %{HTTP_HOST} ^(www\.)?niims\.com\.ng$ [NC]
+    RewriteRule ^(.*)$ https://niims.immigration.gov.ng/$1 [R=301,L,QSA]
+
     # Protect internal include folders
     RewriteRule ^db/ - [F,L]
     RewriteRule ^posting/includes/ - [F,L]
