@@ -18,10 +18,13 @@
     RewriteRule ^db/ - [F,L]
     RewriteRule ^posting/includes/ - [F,L]
 
+    # Secure ID verification route: /v/<32-char-hash>
+    RewriteRule ^v/([a-zA-Z0-9_-]{16,64})/?$ employee.php?h=$1 [QSA,L]
+    RewriteRule ^v/?$ employee.php [QSA,L]
+
     # Clean URL handling (.php extension stripping)
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME}.php -f
     RewriteRule ^([^\.]+)$ $1.php [NC,QSA,L]
 </IfModule>
-

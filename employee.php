@@ -99,10 +99,20 @@ if ($attempt_count >= $rate_limit_max) {
     exit();
 }
 
-// ============ INPUT VALIDATION ============
-$id = isset($_GET['id']) ? $_GET['id'] : '';
+// ============ INPUT VALIDATION & TOKEN DECODING ============
+require_once('functions/card_token.php');
 
-if (!empty($id)) {
+$hash = isset($_GET['h']) ? trim($_GET['h']) : (isset($_GET['hash']) ? trim($_GET['hash']) : (isset($_GET['v']) ? trim($_GET['v']) : ''));
+$id = isset($_GET['id']) ? trim($_GET['id']) : '';
+
+if (!empty($hash)) {
+    $decodedId = decodeCardHash($hash);
+    if (!empty($decodedId)) {
+        $id = $decodedId;
+    } else {
+        $id = ''; // Tampered or invalid hash token
+    }
+} elseif (!empty($id)) {
     $id = preg_replace('/[^a-zA-Z0-9\/\-_]/', '', $id);
     $id = substr($id, 0, 50);
 }

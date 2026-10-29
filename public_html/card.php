@@ -85,7 +85,9 @@ while ($foundk = mysqli_fetch_array($retrieve)) {
     $bloodType = $foundk['bloodType'];
 }
 
-$staffData = 'https://niims.immigration.gov.ng/employee.php?id=' . $profile;
+require_once('functions/card_token.php');
+$cardHash = generateCardHash($profile);
+$staffData = 'https://niims.immigration.gov.ng/v/' . $cardHash;
 
 // ============ QR CODE GENERATION ============
 $matrix = QRcode::text($staffData);
