@@ -24,7 +24,7 @@ header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: strict-origin-when-cross-origin');
 // CSP: allows inline scripts/styles (required by Gentelella template), self-hosted assets,
 // Chart.js CDN, and font CDNs. Blocks framing, object tags, and base URI hijacking.
-header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self';");
+header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data:; frame-src 'self' https://challenges.cloudflare.com; connect-src 'self' https://challenges.cloudflare.com; frame-ancestors 'none'; object-src 'none'; base-uri 'self';");
 
 // Disable error reporting in production
 error_reporting(0);
@@ -211,6 +211,59 @@ function generateCaptchaCode($length = 6) {
 }
 
 // ============================================================================
+// CLOUDFLARE TURNSTILE CONFIGURATION & VERIFICATION
+// ============================================================================
+define('TURNSTILE_SITE_KEY', '0x4AAAAAAFpWM5olq43To2dX');
+define('TURNSTILE_SECRET_KEY', '0x4AAAAAAFpWM8Tr7vaQDxWHVKt82JPnI0Y');
+
+/**
+ * Verify Cloudflare Turnstile response token with Cloudflare API
+ */
+function verifyTurnstile($token, $remoteIp = '') {
+    if (empty($token)) {
+        return false;
+    }
+
+    $url = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
+    $postData = http_build_query([
+        'secret' => TURNSTILE_SECRET_KEY,
+        'response' => $token,
+        'remoteip' => $remoteIp ?: ($_SERVER['REMOTE_ADDR'] ?? '')
+    ]);
+
+    if (function_exists('curl_init')) {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+        $response = curl_exec($ch);
+        curl_close($ch);
+    } else {
+        $options = [
+            'http' => [
+                'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
+                'method'  => 'POST',
+                'content' => $postData,
+                'timeout' => 10
+            ]
+        ];
+        $context  = stream_context_create($options);
+        $response = @file_get_contents($url, false, $context);
+    }
+
+    if ($response === false) {
+        error_log("Cloudflare Turnstile verification request failed");
+        return false;
+    }
+
+    $data = json_decode($response, true);
+    return !empty($data['success']);
+}
+
+// ============================================================================
 // MAIN APPLICATION LOGIC
 // ============================================================================
 
@@ -366,23 +419,19 @@ if (isset($_POST['login'])) {
     } else {
         $username = isset($_POST['username']) ? sanitize_input(trim($_POST['username'])) : '';
         $password = isset($_POST['password']) ? trim($_POST['password']) : '';
-        $captcha_input = isset($_POST['captcha']) ? trim($_POST['captcha']) : '';
-        
-        $captcha_valid = false;
-        if (isset($_SESSION['captcha_code']) && !empty($captcha_input)) {
-            $captcha_valid = (strtoupper($captcha_input) === $_SESSION['captcha_code']);
-        }
-        
-        // Reset CAPTCHA so it cannot be reused
-        unset($_SESSION['captcha_code']);
-        $_SESSION['captcha_code'] = generateCaptchaCode();
-        
+        $turnstile_response = isset($_POST['cf-turnstile-response']) ? trim($_POST['cf-turnstile-response']) : '';
+        $turnstile_valid = verifyTurnstile($turnstile_response, $_SERVER['REMOTE_ADDR'] ?? '');
+
         $brute_force_check = check_brute_force($username);
         if ($brute_force_check) {
             $error_message = $brute_force_check;
             $has_error = true;
-        } elseif (empty($username) || empty($password) || empty($captcha_input)) {
-            $error_message = "All fields are required. Please fill in username, password, and CAPTCHA.";
+        } elseif (empty($username) || empty($password)) {
+            $error_message = "Please enter both your Service Number and Password.";
+            $has_error = true;
+            record_failed_attempt($username);
+        } elseif (!$turnstile_valid) {
+            $error_message = "Security verification failed. Please complete the Cloudflare Turnstile check.";
             $has_error = true;
             record_failed_attempt($username);
         } elseif (!$captcha_valid) {
@@ -957,24 +1006,9 @@ if (empty($_SESSION['csrf_token'])) {
                                 </button>
                             </div>
                             
-                            <!-- CAPTCHA Section -->
-                            <div class="captcha-container">
-                                <div class="captcha-code" id="captchaDisplay">
-                                    <img id="captchaImg" src="captcha_image.php?t=<?php echo time(); ?>"
-                                         alt="CAPTCHA code" width="180" height="60"
-                                         style="display:block;margin:0 auto;border-radius:4px;border:1px solid #ccc;">
-                                </div>
-                                <input type="text" name="captcha" class="form-control captcha-input" placeholder="Enter CAPTCHA code" required
-                                       maxlength="6" autocomplete="off" oninput="this.value = this.value.toUpperCase()" />
-                                <div class="captcha-controls">
-                                    <a class="refresh-captcha" onclick="refreshCaptcha()" style="cursor: pointer;">
-                                        <i class="fa fa-refresh"></i> Refresh CAPTCHA
-                                    </a>
-                                    <small>Case insensitive</small>
-                                </div>
-                                <div class="captcha-error" id="captchaError" style="color: #dc3545; font-size: 12px; margin-top: 5px; display: none;">
-                                    Invalid CAPTCHA code. Please try again.
-                                </div>
+                            <!-- Cloudflare Turnstile Widget Section -->
+                            <div style="margin: 18px 0; display: flex; justify-content: center; align-items: center; min-height: 65px;">
+                                <div class="cf-turnstile" data-sitekey="<?php echo htmlspecialchars(TURNSTILE_SITE_KEY); ?>" data-theme="light"></div>
                             </div>
                             
                             <!-- Hidden input to guarantee login is submitted even if button is disabled by JS -->
@@ -1109,6 +1143,13 @@ if (empty($_SESSION['csrf_token'])) {
                     e.preventDefault();
                     alert('Password must be at least 8 characters long.');
                     passwordInput.focus();
+                    return false;
+                }
+
+                const turnstileInput = document.querySelector('[name="cf-turnstile-response"]');
+                if (turnstileInput && !turnstileInput.value) {
+                    e.preventDefault();
+                    alert('Please complete the Cloudflare security verification.');
                     return false;
                 }
 
