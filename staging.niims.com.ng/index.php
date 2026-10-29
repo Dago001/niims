@@ -555,6 +555,8 @@ if (empty($_SESSION['csrf_token'])) {
     <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
 
     <title>NIIMS</title>
+    <!-- Cloudflare Turnstile -->
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
     <!-- Bootstrap -->
     <link href="vendors/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
