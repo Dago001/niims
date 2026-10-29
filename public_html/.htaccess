@@ -18,6 +18,9 @@
     RewriteRule ^db/ - [F,L]
     RewriteRule ^posting/includes/ - [F,L]
 
+    # Fix relative asset requests under /v/
+    RewriteRule ^v/(upload|images|build|vendors)/(.*)$ $1/$2 [L,NC]
+
     # Secure ID verification route: /v/<32-char-hash>
     RewriteRule ^v/([a-zA-Z0-9_-]{16,64})/?$ employee.php?h=$1 [QSA,L]
     RewriteRule ^v/?$ employee.php [QSA,L]

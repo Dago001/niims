@@ -279,28 +279,25 @@ function getStaffPhoto($profile, $uploadDir = 'upload/') {
     $profile = basename($profile);
     $profile = preg_replace('/[^a-zA-Z0-9\/\-_]/', '', $profile);
     
-    $defaultPhoto = $uploadDir . 'default.png';
+    $defaultPhoto = '/upload/default.png';
     
     if (empty($profile)) {
-        return file_exists($defaultPhoto) ? $defaultPhoto : 'https://via.placeholder.com/85x85?text=No+Photo';
+        return file_exists('upload/default.png') ? $defaultPhoto : 'https://via.placeholder.com/85x85?text=No+Photo';
     }
     
     $extensions = ['.png', '.jpg', '.jpeg', '.PNG', '.JPG', '.JPEG'];
     
     foreach ($extensions as $ext) {
-        $photoPath = $uploadDir . $profile . $ext;
-        $realPath = realpath($photoPath);
-        $realUploadDir = realpath($uploadDir);
-        
-        if ($realPath && $realUploadDir && strpos($realPath, $realUploadDir) === 0 && file_exists($realPath)) {
-            $imageInfo = @getimagesize($realPath);
+        $photoPath = 'upload/' . $profile . $ext;
+        if (file_exists($photoPath)) {
+            $imageInfo = @getimagesize($photoPath);
             if ($imageInfo !== false) {
-                return $photoPath;
+                return '/' . $photoPath;
             }
         }
     }
     
-    return file_exists($defaultPhoto) ? $defaultPhoto : 'https://via.placeholder.com/85x85?text=No+Photo';
+    return file_exists('upload/default.png') ? $defaultPhoto : 'https://via.placeholder.com/85x85?text=No+Photo';
 }
 
 $staffPhoto = getStaffPhoto($profile);
@@ -310,6 +307,7 @@ $fullName = trim($surname . ' ' . $firstname . ' ' . $middlename);
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <base href="/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ID Verification - <?php echo htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8'); ?></title>
@@ -439,7 +437,7 @@ $fullName = trim($surname . ' ' . $firstname . ' ' . $middlename);
                         <img src="<?php echo htmlspecialchars($staffPhoto, ENT_QUOTES, 'UTF-8'); ?>" 
                              class="staff-photo" 
                              alt="Staff Photo"
-                             onerror="this.src='upload/default.png';"
+                             onerror="this.onerror=null; this.src='/upload/default.png';"
                              draggable="false">
                         <br>
                         <span class="photo-verified-badge">
