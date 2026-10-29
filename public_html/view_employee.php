@@ -444,17 +444,11 @@ if ($record) {
                             <?php if (!empty($currentRank)): ?>
                                 <span class="profile-badge"><i class="fa fa-star"></i> <?php echo h($currentRank); ?></span>
                             <?php endif; ?>
-                            <?php if (!empty($ippisNo)): ?>
-                                <span class="profile-badge"><i class="fa fa-money"></i> IPPIS: <?php echo h($ippisNo); ?></span>
-                            <?php endif; ?>
                             <?php if (!empty($formattedPosting)): ?>
                                 <span class="profile-badge"><i class="fa fa-building"></i> <?php echo h($formattedPosting); ?></span>
                             <?php endif; ?>
                             <?php if (!empty($empStatus)): ?>
                                 <span class="profile-badge"><i class="fa fa-check-circle"></i> Status: <?php echo h($empStatus); ?></span>
-                            <?php endif; ?>
-                            <?php if (!empty($cardStatus)): ?>
-                                <span class="profile-badge"><i class="fa fa-credit-card"></i> Card: <?php echo h($cardStatus); ?></span>
                             <?php endif; ?>
                         </div>
                     </div>
