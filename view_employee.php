@@ -9,20 +9,24 @@ if (!isset($_SESSION['username'])) {
 require_once('db/db.php');
 require_once('functions/posting_helper.php');
 
-if ($_SESSION['role'] == "DataEntry") {
-    include 'sidebar-dataentry.php';
-}
-if ($_SESSION['role'] == "Supervisor") {
-    include 'sidebar-supervisor.php';
-}
-if ($_SESSION['role'] == "Report") {
-    include 'sidebar-view.php';
-}
-if ($_SESSION['role'] == "Admin") {
-    include 'sidebar-admin.php';
-}
-if ($_SESSION['role'] == "SuperAdmin") {
+$user_role_clean = strtolower(trim($_SESSION['role'] ?? ''));
+
+if ($user_role_clean === 'superadmin' || $user_role_clean === 'super_admin' || $user_role_clean === 'super admin') {
     include 'sidebar-superadmin.php';
+} elseif ($user_role_clean === 'admin') {
+    include 'sidebar-admin.php';
+} elseif ($user_role_clean === 'supervisor') {
+    include 'sidebar-supervisor.php';
+} elseif ($user_role_clean === 'dataentry' || $user_role_clean === 'data_entry' || $user_role_clean === 'data entry') {
+    include 'sidebar-dataentry.php';
+} elseif ($user_role_clean === 'report' || $user_role_clean === 'view') {
+    include 'sidebar-view.php';
+} elseif ($user_role_clean === 'cgi') {
+    include 'sidebar-cgi.php';
+} elseif (file_exists('sidebar-admin.php')) {
+    include 'sidebar-admin.php';
+} else {
+    include 'sidebar.php';
 }
 
 include 'menu-footer-buttons.php';
@@ -34,7 +38,7 @@ function h($value) {
 
 function field($value) {
     $value = trim((string) ($value ?? ''));
-    if ($value === '' || $value === '0000-00-00') {
+    if ($value === '' || $value === '0000-00-00' || $value === '0000/00/00' || strtolower($value) === 'null') {
         return '<span class="text-muted">N/A</span>';
     }
     return h($value);
@@ -53,12 +57,17 @@ function findExistingFile($dir, $baseName) {
 $id = isset($_GET['id']) ? trim($_GET['id']) : '';
 $record = null;
 
-if ($id !== '' && ctype_digit($id)) {
-    $sqluse = "SELECT emp.serviceNo, emp.surname, emp.firstName, emp.maiden_name, emp.signature,
-                emp.middleName, emp.bloodType, emp.gender, emp.state_of_origin, emp2.presentPosting,
-                emp2.directorate, emp2.unit, emp2.posting_other,
-                emp.dob, nk.nok, nk.nok_phone, nk.nok_relationship, emp.lga, emp.town,
-                emp2.dofa, emp2.dopa, emp.marital_status, qf.qualification, qf.date_obtained, emp2.currentRank, fn.ippis_No
+if ($id !== '') {
+    $sqluse = "SELECT 
+                emp.serviceNo, emp.surname, emp.firstName, emp.middleName, emp.maiden_name,
+                emp.dob, emp.gender, emp.marital_status, emp.bloodType, emp.genotype,
+                emp.state_of_origin, emp.lga, emp.town, emp.phone, emp.email,
+                emp.card_status, emp.date_of_entry AS enrolment_date, emp.signature,
+                emp2.currentRank, emp2.presentPosting, emp2.directorate, emp2.unit, emp2.posting_other,
+                emp2.dofa, emp2.dopa, emp2.empStatus,
+                nk.nok, nk.nok_phone, nk.nok_relationship,
+                qf.*,
+                fn.*
                 FROM tbl_emppersonal emp
                 LEFT JOIN tbl_employment emp2 ON emp.serviceNo = emp2.serviceNo
                 LEFT JOIN tbl_nok nk ON emp.serviceNo = nk.serviceNo
@@ -67,24 +76,72 @@ if ($id !== '' && ctype_digit($id)) {
                 WHERE emp.serviceNo = ?
                 LIMIT 1";
     $stmt = mysqli_prepare($conn, $sqluse);
-    mysqli_stmt_bind_param($stmt, "i", $id);
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
-    $record = mysqli_fetch_assoc($result);
-    mysqli_stmt_close($stmt);
+    if ($stmt) {
+        mysqli_stmt_bind_param($stmt, "s", $id);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        $record = mysqli_fetch_assoc($result);
+        mysqli_stmt_close($stmt);
+    }
 }
 
 if ($record) {
     $profile = $record['serviceNo'];
     $photoPath = findExistingFile('upload/', $profile);
     $signaturePath = findExistingFile('signature/', $profile);
-    $fullName = trim($record['firstName'] . ' ' . $record['middleName'] . ' ' . $record['surname']);
+    $fullName = trim(($record['firstName'] ?? '') . ' ' . ($record['middleName'] ?? '') . ' ' . ($record['surname'] ?? ''));
     $formattedPosting = formatPresentPosting(
-        $record['presentPosting'],
+        $record['presentPosting'] ?? '',
         $record['directorate'] ?? '',
         $record['unit'] ?? '',
         $record['posting_other'] ?? ''
     );
+
+    // Personal Information
+    $surname = $record['surname'] ?? '';
+    $firstName = $record['firstName'] ?? '';
+    $middleName = $record['middleName'] ?? '';
+    $maidenName = $record['maiden_name'] ?? '';
+    $dob = $record['dob'] ?? '';
+    $gender = $record['gender'] ?? '';
+    $maritalStatus = $record['marital_status'] ?? '';
+    $bloodType = $record['bloodType'] ?? '';
+    $genotype = $record['genotype'] ?? '';
+    $stateOfOrigin = $record['state_of_origin'] ?? '';
+    $lga = $record['lga'] ?? '';
+    $town = $record['town'] ?? '';
+    $phone = $record['phone'] ?? '';
+    $email = $record['email'] ?? '';
+    $cardStatus = $record['card_status'] ?? '';
+    $enrolmentDate = $record['enrolment_date'] ?? $record['date_of_entry'] ?? '';
+
+    // Next of Kin
+    $nok = $record['nok'] ?? '';
+    $nokRelationship = $record['nok_relationship'] ?? '';
+    $nokPhone = $record['nok_phone'] ?? '';
+
+    // Employment Information
+    $currentRank = $record['currentRank'] ?? '';
+    $empStatus = $record['empStatus'] ?? 'Active';
+    $dofa = $record['dofa'] ?? '';
+    $dopa = $record['dopa'] ?? '';
+    $directorate = $record['directorate'] ?? '';
+    $unit = $record['unit'] ?? '';
+    $postingOther = $record['posting_other'] ?? '';
+
+    // Educational Qualification
+    $qualification = $record['qualification'] ?? '';
+    $institution = $record['institution'] ?? '';
+    $certNumber = $record['certificate_number'] ?? $record['certificateNo'] ?? '';
+    $dateObtained = $record['date_obtained'] ?? $record['dateObtained'] ?? '';
+
+    // Financial & Banking Details
+    $ippisNo = $record['IPPIS_No'] ?? $record['ippis_No'] ?? $record['ippis'] ?? '';
+    $bank = $record['bank'] ?? '';
+    $accountNo = $record['accountNo'] ?? $record['account_number'] ?? '';
+    $pfa = $record['PFA'] ?? $record['pfa'] ?? '';
+    $rsa = $record['pensionNo'] ?? $record['rsa'] ?? '';
+    $nhfNo = $record['NHF_No'] ?? $record['nhf'] ?? '';
 }
 ?>
 <style>
@@ -195,12 +252,16 @@ if ($record) {
     .signature-box {
         border: 1px dashed #d0d5d9;
         border-radius: 6px;
-        padding: 10px;
+        padding: 12px;
         text-align: center;
         background: #fafbfc;
+        min-height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     .signature-box img {
-        max-height: 60px;
+        max-height: 70px;
         max-width: 100%;
     }
     .not-found-card {
@@ -236,10 +297,6 @@ if ($record) {
             margin: 0 !important;
             padding: 0 !important;
         }
-        /* Bootstrap's floated two-column grid does not paginate predictably
-           when combined with break-inside:avoid (it was producing a large
-           blank gap on page 1 before jumping the whole next card to page 2)
-           — stacking to a single column for print avoids that entirely. */
         .row {
             display: block !important;
         }
@@ -285,10 +342,6 @@ if ($record) {
             font-size: 100px;
             font-weight: 800;
             letter-spacing: 16px;
-            /* !important is required here: Bootstrap's own print stylesheet
-               forces `*, *:before, *:after { color: #000 !important; }`,
-               which otherwise beats this rule outright regardless of
-               selector specificity or source order. */
             color: rgba(164, 22, 26, 0.16) !important;
             white-space: nowrap;
             z-index: 9999;
@@ -339,6 +392,7 @@ if ($record) {
         }
     }
 </style>
+
 <!-- page content -->
 <div class="right_col" role="main">
     <?php if ($record): ?>
@@ -358,6 +412,7 @@ if ($record) {
         </div>
     </div>
     <?php endif; ?>
+
     <div class="">
         <div class="page-title">
             <div class="title_left">
@@ -378,7 +433,7 @@ if ($record) {
 
                 <div class="profile-header-card">
                     <div class="profile-photo-wrap">
-                        <img src="<?php echo $photoPath ? h($photoPath) : "data:image/svg+xml;base64," . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><rect width="100%" height="100%" fill="#95a5a6"/><text x="50%" y="55%" font-family="Arial" font-size="40" fill="#fff" text-anchor="middle">' . strtoupper(substr($record['firstName'] ?? '?', 0, 1)) . '</text></svg>'); ?>"
+                        <img src="<?php echo $photoPath ? h($photoPath) : "data:image/svg+xml;base64," . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><rect width="100%" height="100%" fill="#95a5a6"/><text x="50%" y="55%" font-family="Arial" font-size="40" fill="#fff" text-anchor="middle">' . strtoupper(substr($firstName ?: '?', 0, 1)) . '</text></svg>'); ?>"
                              alt="Profile Photo"
                              onerror="this.onerror=null; this.src='data:image/svg+xml;base64,<?php echo base64_encode('<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><rect width="100%" height="100%" fill="#95a5a6"/></svg>'); ?>';">
                     </div>
@@ -386,62 +441,97 @@ if ($record) {
                         <h2><?php echo h($fullName ?: 'N/A'); ?></h2>
                         <div class="badge-row">
                             <span class="profile-badge"><i class="fa fa-id-badge"></i> Service No: <?php echo h($profile); ?></span>
-                            <?php if (!empty($record['currentRank'])): ?>
-                                <span class="profile-badge"><i class="fa fa-star"></i> <?php echo h($record['currentRank']); ?></span>
+                            <?php if (!empty($currentRank)): ?>
+                                <span class="profile-badge"><i class="fa fa-star"></i> <?php echo h($currentRank); ?></span>
                             <?php endif; ?>
-                            <?php if (!empty($record['ippis_No'])): ?>
-                                <span class="profile-badge"><i class="fa fa-money"></i> IPPIS: <?php echo h($record['ippis_No']); ?></span>
+                            <?php if (!empty($ippisNo)): ?>
+                                <span class="profile-badge"><i class="fa fa-money"></i> IPPIS: <?php echo h($ippisNo); ?></span>
                             <?php endif; ?>
                             <?php if (!empty($formattedPosting)): ?>
                                 <span class="profile-badge"><i class="fa fa-building"></i> <?php echo h($formattedPosting); ?></span>
+                            <?php endif; ?>
+                            <?php if (!empty($empStatus)): ?>
+                                <span class="profile-badge"><i class="fa fa-check-circle"></i> Status: <?php echo h($empStatus); ?></span>
+                            <?php endif; ?>
+                            <?php if (!empty($cardStatus)): ?>
+                                <span class="profile-badge"><i class="fa fa-credit-card"></i> Card: <?php echo h($cardStatus); ?></span>
                             <?php endif; ?>
                         </div>
                     </div>
                     <div class="profile-actions">
                         <button class="btn btn-default" onclick="history.back()"><i class="fa fa-arrow-left"></i> Back</button>
+                        <a href="enrolment-update?search=<?php echo urlencode($profile); ?>" class="btn btn-success"><i class="fa fa-pencil"></i> Edit Record</a>
                         <button class="btn btn-primary" onclick="window.print()"><i class="fa fa-print"></i> Print</button>
                     </div>
                 </div>
 
                 <div class="row">
+                    <!-- Left Column: Personal Info & Next of Kin -->
                     <div class="col-md-6 col-sm-12">
                         <div class="info-card">
                             <h4 class="info-card-title"><i class="fa fa-user"></i> Personal Information</h4>
-                            <div class="info-row"><span class="info-label">Surname</span><span class="info-value"><?php echo field($record['surname']); ?></span></div>
-                            <div class="info-row"><span class="info-label">First Name</span><span class="info-value"><?php echo field($record['firstName']); ?></span></div>
-                            <div class="info-row"><span class="info-label">Middle Name</span><span class="info-value"><?php echo field($record['middleName']); ?></span></div>
-                            <div class="info-row"><span class="info-label">Maiden Name</span><span class="info-value"><?php echo field($record['maiden_name']); ?></span></div>
-                            <div class="info-row"><span class="info-label">Date of Birth</span><span class="info-value"><?php echo field($record['dob']); ?></span></div>
-                            <div class="info-row"><span class="info-label">Gender</span><span class="info-value"><?php echo field($record['gender']); ?></span></div>
-                            <div class="info-row"><span class="info-label">Marital Status</span><span class="info-value"><?php echo field($record['marital_status']); ?></span></div>
-                            <div class="info-row"><span class="info-label">Blood Group</span><span class="info-value"><?php echo field($record['bloodType']); ?></span></div>
-                            <div class="info-row"><span class="info-label">State of Origin</span><span class="info-value"><?php echo field($record['state_of_origin']); ?></span></div>
-                            <div class="info-row"><span class="info-label">LGA</span><span class="info-value"><?php echo field($record['lga']); ?></span></div>
-                            <div class="info-row"><span class="info-label">Town</span><span class="info-value"><?php echo field($record['town']); ?></span></div>
+                            <div class="info-row"><span class="info-label">Surname</span><span class="info-value"><?php echo field($surname); ?></span></div>
+                            <div class="info-row"><span class="info-label">First Name</span><span class="info-value"><?php echo field($firstName); ?></span></div>
+                            <div class="info-row"><span class="info-label">Middle Name</span><span class="info-value"><?php echo field($middleName); ?></span></div>
+                            <div class="info-row"><span class="info-label">Maiden Name</span><span class="info-value"><?php echo field($maidenName); ?></span></div>
+                            <div class="info-row"><span class="info-label">Date of Birth</span><span class="info-value"><?php echo field($dob); ?></span></div>
+                            <div class="info-row"><span class="info-label">Gender</span><span class="info-value"><?php echo field($gender); ?></span></div>
+                            <div class="info-row"><span class="info-label">Marital Status</span><span class="info-value"><?php echo field($maritalStatus); ?></span></div>
+                            <div class="info-row"><span class="info-label">Blood Group</span><span class="info-value"><?php echo field($bloodType); ?></span></div>
+                            <div class="info-row"><span class="info-label">Genotype</span><span class="info-value"><?php echo field($genotype); ?></span></div>
+                            <div class="info-row"><span class="info-label">State of Origin</span><span class="info-value"><?php echo field($stateOfOrigin); ?></span></div>
+                            <div class="info-row"><span class="info-label">LGA</span><span class="info-value"><?php echo field($lga); ?></span></div>
+                            <div class="info-row"><span class="info-label">Town / City</span><span class="info-value"><?php echo field($town); ?></span></div>
+                            <div class="info-row"><span class="info-label">Phone Number</span><span class="info-value"><?php echo field($phone); ?></span></div>
+                            <div class="info-row"><span class="info-label">Email Address</span><span class="info-value"><?php echo field($email); ?></span></div>
+                            <div class="info-row"><span class="info-label">Card Status</span><span class="info-value"><?php echo field($cardStatus); ?></span></div>
+                            <div class="info-row"><span class="info-label">Enrolment Date</span><span class="info-value"><?php echo field($enrolmentDate); ?></span></div>
                         </div>
 
                         <div class="info-card">
                             <h4 class="info-card-title"><i class="fa fa-users"></i> Next of Kin</h4>
-                            <div class="info-row"><span class="info-label">Name</span><span class="info-value"><?php echo field($record['nok']); ?></span></div>
-                            <div class="info-row"><span class="info-label">Relationship</span><span class="info-value"><?php echo field($record['nok_relationship']); ?></span></div>
-                            <div class="info-row"><span class="info-label">Phone</span><span class="info-value"><?php echo field($record['nok_phone']); ?></span></div>
+                            <div class="info-row"><span class="info-label">Full Name</span><span class="info-value"><?php echo field($nok); ?></span></div>
+                            <div class="info-row"><span class="info-label">Relationship</span><span class="info-value"><?php echo field($nokRelationship); ?></span></div>
+                            <div class="info-row"><span class="info-label">Phone Number</span><span class="info-value"><?php echo field($nokPhone); ?></span></div>
                         </div>
                     </div>
 
+                    <!-- Right Column: Employment, Education, Finance & Signature -->
                     <div class="col-md-6 col-sm-12">
                         <div class="info-card">
                             <h4 class="info-card-title"><i class="fa fa-briefcase"></i> Employment Information</h4>
-                            <div class="info-row"><span class="info-label">Current Rank</span><span class="info-value"><?php echo field($record['currentRank']); ?></span></div>
+                            <div class="info-row"><span class="info-label">Current Rank</span><span class="info-value"><?php echo field($currentRank); ?></span></div>
+                            <div class="info-row"><span class="info-label">Employment Status</span><span class="info-value"><?php echo field($empStatus); ?></span></div>
                             <div class="info-row"><span class="info-label">Current Formation</span><span class="info-value"><?php echo field($formattedPosting); ?></span></div>
-                            <div class="info-row"><span class="info-label">Date of First Appointment</span><span class="info-value"><?php echo field($record['dofa']); ?></span></div>
-                            <div class="info-row"><span class="info-label">Date of Present Appointment</span><span class="info-value"><?php echo field($record['dopa']); ?></span></div>
-                            <div class="info-row"><span class="info-label">IPPIS No</span><span class="info-value"><?php echo field($record['ippis_No']); ?></span></div>
+                            <?php if (!empty($directorate)): ?>
+                                <div class="info-row"><span class="info-label">Directorate</span><span class="info-value"><?php echo field($directorate); ?></span></div>
+                            <?php endif; ?>
+                            <?php if (!empty($unit)): ?>
+                                <div class="info-row"><span class="info-label">Unit</span><span class="info-value"><?php echo field($unit); ?></span></div>
+                            <?php endif; ?>
+                            <?php if (!empty($postingOther)): ?>
+                                <div class="info-row"><span class="info-label">Office / Specifics</span><span class="info-value"><?php echo field($postingOther); ?></span></div>
+                            <?php endif; ?>
+                            <div class="info-row"><span class="info-label">Date of First Appointment</span><span class="info-value"><?php echo field($dofa); ?></span></div>
+                            <div class="info-row"><span class="info-label">Date of Present Appointment</span><span class="info-value"><?php echo field($dopa); ?></span></div>
                         </div>
 
                         <div class="info-card">
                             <h4 class="info-card-title"><i class="fa fa-graduation-cap"></i> Educational Information</h4>
-                            <div class="info-row"><span class="info-label">Qualification</span><span class="info-value"><?php echo field($record['qualification']); ?></span></div>
-                            <div class="info-row"><span class="info-label">Date Obtained</span><span class="info-value"><?php echo field($record['date_obtained']); ?></span></div>
+                            <div class="info-row"><span class="info-label">Highest Qualification</span><span class="info-value"><?php echo field($qualification); ?></span></div>
+                            <div class="info-row"><span class="info-label">Institution</span><span class="info-value"><?php echo field($institution); ?></span></div>
+                            <div class="info-row"><span class="info-label">Certificate Number</span><span class="info-value"><?php echo field($certNumber); ?></span></div>
+                            <div class="info-row"><span class="info-label">Date Obtained</span><span class="info-value"><?php echo field($dateObtained); ?></span></div>
+                        </div>
+
+                        <div class="info-card">
+                            <h4 class="info-card-title"><i class="fa fa-university"></i> Financial &amp; Pension Details</h4>
+                            <div class="info-row"><span class="info-label">IPPIS Number</span><span class="info-value"><?php echo field($ippisNo); ?></span></div>
+                            <div class="info-row"><span class="info-label">Salary Bank</span><span class="info-value"><?php echo field($bank); ?></span></div>
+                            <div class="info-row"><span class="info-label">Account Number</span><span class="info-value"><?php echo field($accountNo); ?></span></div>
+                            <div class="info-row"><span class="info-label">Pension Administrator (PFA)</span><span class="info-value"><?php echo field($pfa); ?></span></div>
+                            <div class="info-row"><span class="info-label">RSA / Pension PIN</span><span class="info-value"><?php echo field($rsa); ?></span></div>
+                            <div class="info-row"><span class="info-label">National Housing Fund (NHF) No</span><span class="info-value"><?php echo field($nhfNo); ?></span></div>
                         </div>
 
                         <div class="info-card">
