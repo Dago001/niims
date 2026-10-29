@@ -434,10 +434,6 @@ if (isset($_POST['login'])) {
             $error_message = "Security verification failed. Please complete the Cloudflare Turnstile check.";
             $has_error = true;
             record_failed_attempt($username);
-        } elseif (!$captcha_valid) {
-            $error_message = "Invalid CAPTCHA code. Please try again.";
-            $has_error = true;
-            record_failed_attempt($username);
         } elseif (!validate_username($username)) {
             $error_message = "Invalid username format.";
             $has_error = true;
