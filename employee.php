@@ -115,6 +115,15 @@ if (!empty($hash)) {
 } elseif (!empty($id)) {
     $id = preg_replace('/[^a-zA-Z0-9\/\-_]/', '', $id);
     $id = substr($id, 0, 50);
+
+    // Seamless auto-upgrade for existing 5,000+ cards already issued:
+    // When an older card QR code (employee.php?id=...) is scanned,
+    // seamlessly forward to the secure /v/<hash> URL so it works perfectly.
+    $secureHash = generateCardHash($id);
+    if (!empty($secureHash)) {
+        header("Location: /v/" . $secureHash, true, 301);
+        exit();
+    }
 }
 
 $id = mysqli_real_escape_string($conn, $id);
